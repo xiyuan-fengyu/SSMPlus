@@ -10,22 +10,22 @@ public class Test {
     public static class PersonParams extends Params {
 
         @StrLen(min = 5, max = 10, error = "用户id有误")
-        public long id;
+        private long id;
 
         @JsExp(exp = "it && it[0] != '_'", error = "名字有误")
-        public String name;
+        private String name;
 
         @JsExp(exp = "it && it.match(/^1[34578]\\d{9}$/)", error = "电话有误")
-        public String phone;
+        private String phone;
 
         @Match(regex = "boy|girl|unknow", error = "性别有误")
-        public String sex;
+        private String sex;
 
         @Range(min = 0, max = 150, error = "年龄有误")
-        public int age;
+        private int age;
 
         @JsExp(exp = "it == null || it.sex != ctx.sex", error = "配偶信息有误")
-        public PersonParams spouse;
+        private PersonParams spouse;
 
         @JsExp(exp = "" +
                 "var result = true;" +
@@ -37,7 +37,7 @@ public class Test {
                 "}" +
                 "result;",
                 error = "兴趣信息有误")
-        public String[] interests;
+        private String[] interests;
 
         public long getId() {
             return id;
