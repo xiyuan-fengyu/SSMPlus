@@ -39,6 +39,61 @@ public class Test {
                 error = "兴趣信息有误")
         public String[] interests;
 
+        public long getId() {
+            return id;
+        }
+
+        public void setId(long id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public void setPhone(String phone) {
+            this.phone = phone;
+        }
+
+        public String getSex() {
+            return sex;
+        }
+
+        public void setSex(String sex) {
+            this.sex = sex;
+        }
+
+        public int getAge() {
+            return age;
+        }
+
+        public void setAge(int age) {
+            this.age = age;
+        }
+
+        public PersonParams getSpouse() {
+            return spouse;
+        }
+
+        public void setSpouse(PersonParams spouse) {
+            this.spouse = spouse;
+        }
+
+        public String[] getInterests() {
+            return interests;
+        }
+
+        public void setInterests(String[] interests) {
+            this.interests = interests;
+        }
     }
 
     public static void main(String[] args) {
