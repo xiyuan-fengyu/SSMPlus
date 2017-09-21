@@ -35,7 +35,7 @@ public class Test {
                 "       break;" +
                 "   }" +
                 "}" +
-                "result;" ,
+                "result;",
                 error = "兴趣信息有误")
         public String[] interests;
 
