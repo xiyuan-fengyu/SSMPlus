@@ -11,13 +11,12 @@ public class JsExpChecker implements Checker<JsExp> {
     private static final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName("js");
 
     @Override
-    public boolean valid(JsExp anno, Object value) {
-        if (value == null) return false;
-
+    public boolean valid(JsExp anno, Object value, Object ctx) {
         String exp = anno.exp();
         try {
             SimpleBindings bindings = new SimpleBindings();
             bindings.put(anno.valueName(), value);
+            bindings.put(anno.contextName(), ctx);
             Object res = jsEngine.eval(exp, bindings);
             return res != null && !(Boolean.FALSE.equals(res));
         }

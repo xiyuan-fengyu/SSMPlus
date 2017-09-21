@@ -6,7 +6,7 @@ import com.xiyuan.template.params.annotation.Match;
 public class MatchChecker implements Checker<Match> {
 
     @Override
-    public boolean valid(Match anno, Object value) {
+    public boolean valid(Match anno, Object value, Object ctx) {
         if (value == null) return false;
 
         String str = value.toString();

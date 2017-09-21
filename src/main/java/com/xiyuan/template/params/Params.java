@@ -36,7 +36,7 @@ public class Params {
 //                            e.printStackTrace();
                         }
                     }
-                    if (checker != null && !checker.valid(anno, value)) {
+                    if (checker != null && !checker.valid(anno, value, this)) {
                         try {
                             return (String) annoType.getMethod("error").invoke(anno);
                         } catch (Exception e) {

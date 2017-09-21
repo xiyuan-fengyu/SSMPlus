@@ -163,7 +163,7 @@ public class MpGenerator {
                 Template daoJavaVm = ve.getTemplate("template/daoJava.vm");
                 Template daoXmlVm = ve.getTemplate("template/daoXml.vm");
 
-                Arrays.stream(mapperClassFiles).forEach(mapperClassFile -> {
+                for (File mapperClassFile : mapperClassFiles) {
                     if (mapperClassFile.isFile() && mapperClassFile.getName().endsWith(".java")) {
                         String mapperSimpleName = mapperClassFile.getName().split("\\.")[0];
                         String mapperName = basePackage + ".mapper." + mapperSimpleName;
@@ -205,7 +205,7 @@ public class MpGenerator {
                         }
                     }
 
-                });
+                }
             }
         }
     }

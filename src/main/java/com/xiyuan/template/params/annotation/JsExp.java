@@ -16,6 +16,8 @@ public @interface JsExp {
 
     String valueName() default "it";
 
+    String contextName() default "ctx";
+
     String error();
 
     Class<? extends Checker> checker() default JsExpChecker.class;

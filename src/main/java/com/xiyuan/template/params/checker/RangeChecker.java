@@ -6,7 +6,7 @@ import com.xiyuan.template.params.annotation.Range;
 public class RangeChecker implements Checker<Range> {
 
     @Override
-    public boolean valid(Range anno, Object value) {
+    public boolean valid(Range anno, Object value, Object ctx) {
         if (value == null) return false;
 
         if (value instanceof Number) {
