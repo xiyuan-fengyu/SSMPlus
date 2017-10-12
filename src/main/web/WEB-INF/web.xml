@@ -6,7 +6,8 @@
 
     <context-param>
         <param-name>webAppRootKey</param-name>
-        <param-value>SSMPlus</param-value>
+        <!--部署在同一个tomcat下面的多个web项目的 webAppRootKey 不能重复-->
+        <param-value>app_${YEAR}${MONTH}${DAY}_${HOUR}${MINUTE}</param-value>
     </context-param>
 
     <context-param>
