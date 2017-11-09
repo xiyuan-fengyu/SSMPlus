@@ -260,15 +260,6 @@
         <!--网页抓取和分析 end-->
 
 
-        <!--RSA加密相关（可选） start-->
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk16</artifactId>
-            <version>1.46</version>
-        </dependency>
-        <!--RSA加密相关 end-->
-
-
         <!--xml解析相关（可选） start-->
         <dependency>
             <groupId>dom4j</groupId>
