@@ -28,6 +28,10 @@ public class MpGenerator {
 
     private static final String[] tablePrefixes = new String[]{"tb_"};
 
+    private static final String[] includeTables = {};//要生成的table列表，如果生成所有的table，这里保持为空数组
+
+    private static final String[] excludeTables = {};//要跳过的table列表，如果生成所有的table，这里保持为空数组
+
     private static final String basePackage = "com.xiyuan.template.mybatis";
 
     private static final String javaPath = "src/main/java";
@@ -88,8 +92,8 @@ public class MpGenerator {
                         // .setDbColumnUnderline(true)//全局下划线命名
                         .setTablePrefix(tablePrefixes)// 此处可以修改为您的表前缀
                         .setNaming(NamingStrategy.underline_to_camel)// 表名生成策略
-                        // .setInclude(new String[] { "user" }) // 需要生成的表
-                        // .setExclude(new String[]{"test"}) // 排除生成的表
+                         .setInclude(includeTables) // 需要生成的表
+                         .setExclude(excludeTables) // 排除生成的表
                         // 自定义实体父类
                         // .setSuperEntityClass("com.baomidou.demo.TestEntity")
                         // 自定义实体，公共字段
