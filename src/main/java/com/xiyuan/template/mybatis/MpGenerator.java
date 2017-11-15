@@ -32,6 +32,8 @@ public class MpGenerator {
 
     private static final String[] excludeTables = {};//要跳过的table列表，如果生成所有的table，这里保持为空数组
 
+    private static final NamingStrategy namingStrategy = NamingStrategy.underline_to_camel;//表字段命名方式，采用下划线转驼峰的格式
+
     private static final String basePackage = "com.xiyuan.template.mybatis";
 
     private static final String javaPath = "src/main/java";
@@ -91,7 +93,7 @@ public class MpGenerator {
                         // .setCapitalMode(true)// 全局大写命名
                         // .setDbColumnUnderline(true)//全局下划线命名
                         .setTablePrefix(tablePrefixes)// 此处可以修改为您的表前缀
-                        .setNaming(NamingStrategy.underline_to_camel)// 表名生成策略
+                        .setNaming(namingStrategy)// 表字段生成策略
                          .setInclude(includeTables) // 需要生成的表
                          .setExclude(excludeTables) // 排除生成的表
                         // 自定义实体父类
