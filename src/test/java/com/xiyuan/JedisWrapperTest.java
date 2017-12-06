@@ -1,5 +1,7 @@
 package com.xiyuan;
 
+import com.xiyuan.template.mybatis.entity.Log;
+import com.xiyuan.template.util.ClassUtil;
 import com.xiyuan.template.util.DateUtil;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
@@ -45,10 +47,10 @@ public class JedisWrapperTest {
 //            System.out.println(id);
 //        }
 
-        Set<String> ids = jedis.zrange("all:tb_log:id", 0, -1);
-        for (String id : ids) {
-            System.out.println(id);
-        }
+//        Set<String> ids = jedis.zrange("all:tb_log:id", 0, -1);
+//        for (String id : ids) {
+//            System.out.println(id);
+//        }
     }
 
     public static void main(String[] args) {
