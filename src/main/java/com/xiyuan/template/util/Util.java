@@ -46,7 +46,7 @@ public class Util {
 
     private static final JsonParser jsonParser = new JsonParser();
 
-    public static final Gson gson = new Gson();
+    public static final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
 
     public static final Gson gsonFormat = new GsonBuilder().setPrettyPrinting().create();
 

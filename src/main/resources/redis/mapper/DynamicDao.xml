@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiyuan.template.redis.dao.DynamicDao">
+
+    <resultMap id="BaseResultMap" type="com.xiyuan.template.redis.dao.DynamicEntity">
+        <id column="id" property="id"/>
+    </resultMap>
+
+    <select id="existedCheck" resultType="java.lang.Object">
+        SELECT ${pk} FROM ${table} WHERE ${pk} = #{pkVal} limit 0, 1;
+    </select>
+
+    <select id="selectByPk" resultType="java.util.LinkedHashMap">
+        SELECT * FROM ${table} WHERE ${pk} = #{pkVal} limit 0, 1;
+    </select>
+
+    <select id="selectCountByColVals" resultType="java.lang.Integer">
+        SELECT count(*) FROM ${table}<foreach collection="colVals" item="item" separator=" AND " open=" WHERE " close="">${item.col} = #{item.val}</foreach>;
+    </select>
+
+    <select id="selectByColVals" resultType="java.util.LinkedHashMap">
+        SELECT * FROM ${table}<foreach collection="colVals" item="item" separator=" AND " open=" WHERE " close="">${item.col} = #{item.val}</foreach>;
+    </select>
+
+    <insert id="insert">
+        INSERT INTO ${table} (${pk}<foreach collection="colVals" item="item" separator="," open="," close="">${item.col}</foreach>) value (#{pkVal}<foreach collection="colVals" item="item" separator=", " open=", " close="">#{item.val}</foreach>);
+    </insert>
+
+    <update id="update">
+        UPDATE ${table} SET <foreach collection="colVals" item="item" separator="," open="" close="">${item.col} = #{item.val}</foreach> WHERE ${pk} = #{pkVal};
+    </update>
+
+</mapper>

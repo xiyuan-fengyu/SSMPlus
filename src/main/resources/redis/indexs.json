@@ -1,0 +1,18 @@
+[
+  {
+    "index": "tb_user:id:${user_id}:tb_log:id",
+    "type": "z",
+    "expire": "60 * 60 * 24",
+    "score": "NOW"
+  },
+  {
+    "index": "tb_log:id:${id}",
+    "type": "h",
+    "expire": "604800"
+  },
+  {
+    "index": "all:tb_log:id",
+    "type": "z",
+    "score": "create_time"
+  }
+]

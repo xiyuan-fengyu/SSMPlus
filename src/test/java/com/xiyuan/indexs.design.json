@@ -1,0 +1,23 @@
+[
+  {
+    "index": "tb_user:id:${user_id}:tb_log:id",
+    "type": "SortedSet|z",
+    "expire": "60 * 60 * 24 * 7|-1|空字符串|或者没有这个字段|默认单位s，没有毫秒",
+    "score": "NOW|空字符串|或者没有这个字段|create_time"
+  },
+  {
+    "index": "tb_log:id:${id}",
+    "type": "Hash|h",
+    "expire": "604800"
+  },
+  {
+    "index": "logsL:tb_log:id",
+    "type": "List|l",
+    "expire": "1d|1h|1m|1s * 7"
+  },
+  {
+    "index": "logsS:tb_log:id",
+    "type": "Set|s",
+    "expire": "60 * 60 * 24 * 7"
+  }
+]
