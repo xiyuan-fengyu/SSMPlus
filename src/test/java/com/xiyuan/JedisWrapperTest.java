@@ -1,8 +1,5 @@
 package com.xiyuan;
 
-import com.xiyuan.template.mybatis.entity.Log;
-import com.xiyuan.template.util.ClassUtil;
-import com.xiyuan.template.util.DateUtil;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
