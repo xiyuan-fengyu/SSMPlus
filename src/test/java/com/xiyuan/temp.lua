@@ -41,3 +41,14 @@
 --
 --local temp = toNum("2017-12-06 10:34:45")
 --return temp
+
+
+
+--local allStaticFieldEqual = true
+--local temp = string.gsub("out:${type=0}:${status=1}:tb_log:id", "${(.-)=(.-)}", function (field, value)
+--    if ("" .. 1) ~= value then
+--        allStaticFieldEqual = false
+--    end
+--    return field .. "=" ..value
+--end)
+--return temp

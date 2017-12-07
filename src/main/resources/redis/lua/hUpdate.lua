@@ -12,6 +12,15 @@ local function toNum(obj)
     return num
 end
 
+local function strEqual(item1, item2)
+    if item1 == nil then
+        return item2 == nil
+    elseif item2 == nil then
+        return false
+    end
+    return ("" .. item1) == ("" .. item2)
+end
+
 local key = data.key
 local expire
 local result
@@ -62,58 +71,76 @@ if data.method == "hset" then
             for i, index in ipairs(changeIndexes) do
                 -- 如果 oldValue 不为 nil 或 false， 则需要从旧的索引中删除 keyId
                 if oldValue ~= nil then
-                    local indexKey = index.index
-                    for j, f in ipairs(index.fields) do
-                        indexKey = string.gsub(indexKey, "${" .. f .. "}", oldFieldValues[f])
-                    end
+                    local oldIndexKey = index.index
+                    local remRequired = true
 
-                    local remCall
-                    if index.type == "l" then
-                        remCall = {"lrem", indexKey, "0", keyId}
-                    elseif index.type == "s" or index.type == "z" then
-                        remCall = { index.type .. "rem", indexKey, keyId}
-                    end
+                    oldIndexKey = string.gsub(oldIndexKey, "${(.-)=(.-)}", function (tempField, tempValue)
+                        if field == tempField and strEqual(oldValue, tempValue) == false then
+                            remRequired = false
+                        end
+                        return tempField .. "=" .. tempValue
+                    end)
 
-                    if remCall ~= nil then
-                        redis.call(unpack(remCall))
+                    if remRequired then
+                        for j, f in ipairs(index.fields) do
+                            oldIndexKey = string.gsub(oldIndexKey, "${" .. f .. "}", oldFieldValues[f])
+                        end
+
+                        local remCall
+                        if index.type == "l" then
+                            remCall = {"lrem", oldIndexKey, "0", keyId}
+                        elseif index.type == "s" or index.type == "z" then
+                            remCall = { index.type .. "rem", oldIndexKey, keyId}
+                        end
+
+                        if remCall ~= nil then
+                            redis.call(unpack(remCall))
+                        end
                     end
                 end
 
-                -- 添加新的索引
+                -- 如果索引中包含 ${field=value} 这种，则仅符合这种条件时才添加新的索引
                 local newIndexKey = index.index
-                for j, f in ipairs(index.fields) do
-                    if f == field then
-                        newIndexKey = string.gsub(newIndexKey, "${" .. f .. "}", value)
-                    else
+                local requireAdd = true
+                newIndexKey = string.gsub(newIndexKey, "${(.-)=(.-)}", function (tempField, tempValue)
+                    if field == tempField and strEqual(value, tempValue) == false then
+                        requireAdd = false
+                    end
+                    return tempField .. "=" .. tempValue
+                end)
+
+                if requireAdd then
+                    oldFieldValues[field] = value
+
+                    -- 添加新的索引
+                    for j, f in ipairs(index.fields) do
                         newIndexKey = string.gsub(newIndexKey, "${" .. f .. "}", oldFieldValues[f])
                     end
-                end
 
-                local addIndexCall
-                if index.type == "l" then
-                    addIndexCall = {"lpush", newIndexKey, keyId}
-                elseif index.type == "s" then
-                    addIndexCall = {"sadd", newIndexKey, keyId}
-                elseif index.type == "z" then
-                    local score
-                    if index.score == "NOW" then
-                        score = data.NOW
-                    elseif index.score == field then
-                        score = value
-                    else
-                        score = oldFieldValues[index.score]
+                    local addIndexCall
+                    if index.type == "l" then
+                        addIndexCall = {"lpush", newIndexKey, keyId}
+                    elseif index.type == "s" then
+                        addIndexCall = {"sadd", newIndexKey, keyId}
+                    elseif index.type == "z" then
+                        local score
+                        if index.score == "NOW" then
+                            score = data.NOW
+                        else
+                            score = oldFieldValues[index.score]
+                        end
+
+                        score = toNum(score)
+                        if score ~= nil then
+                            addIndexCall = {"zadd", newIndexKey, score, keyId}
+                        end
                     end
 
-                    score = toNum(score)
-                    if score ~= nil then
-                        addIndexCall = {"zadd", newIndexKey, score, keyId}
-                    end
-                end
-
-                if addIndexCall ~= nil then
-                    redis.call(unpack(addIndexCall))
-                    if index.expire ~= nil and index.expire >= 0 then
-                        redis.call("expire", newIndexKey, index.expire)
+                    if addIndexCall ~= nil then
+                        redis.call(unpack(addIndexCall))
+                        if index.expire ~= nil and index.expire >= 0 then
+                            redis.call("expire", newIndexKey, index.expire)
+                        end
                     end
                 end
 
@@ -169,7 +196,7 @@ elseif data.method == "hmset" then
                 hasFields = true
                 local oldV = oldFieldValues[f]
                 local newV = map[f]
-                if oldV ~= newV then
+                if strEqual(oldV, newV) == false then
                     changed = true
                 end
                 if oldV == nil then
@@ -184,64 +211,84 @@ elseif data.method == "hmset" then
             if existedOldNil == false and changed and hasFields then
                 -- 旧值中没有空值，且值有变化，则需要删除旧的索引
                 local oldIndexKey = index.index
-                for j, f in ipairs(index.fields) do
-                    oldIndexKey = string.gsub(oldIndexKey, "${" .. f .. "}", "" .. oldFieldValues[f])
-                end
+                local remRequired = true
 
-                local remCall
-                if index.type == "l" then
-                    remCall = {"lrem", oldIndexKey, "0", keyId}
-                elseif index.type == "s" or index.type == "z" then
-                    remCall = { index.type .. "rem", oldIndexKey, keyId}
-                end
+                oldIndexKey = string.gsub(oldIndexKey, "${(.-)=(.-)}", function (tempField, tempValue)
+                    if strEqual(oldFieldValues[tempField], tempValue) == false then
+                        remRequired = false
+                    end
+                    return tempField .. "=" .. tempValue
+                end)
 
-                if remCall ~= nil then
-                    redis.call(unpack(remCall))
-                end
-            end
+                if remRequired then
+                    for j, f in ipairs(index.fields) do
+                        oldIndexKey = string.gsub(oldIndexKey, "${" .. f .. "}", "" .. oldFieldValues[f])
+                    end
 
-            if changed then
-                -- 设置新的索引
-                local newIndexKey = index.index
-                for j, f in ipairs(index.fields) do
-                    local newV = map[f]
-                    if f ~= nil then
-                        newIndexKey = string.gsub(newIndexKey, "${" .. f .. "}", newV)
-                    else
-                        newIndexKey = string.gsub(newIndexKey, "${" .. f .. "}", oldFieldValues[f])
+                    local remCall
+                    if index.type == "l" then
+                        remCall = {"lrem", oldIndexKey, "0", keyId}
+                    elseif index.type == "s" or index.type == "z" then
+                        remCall = { index.type .. "rem", oldIndexKey, keyId}
+                    end
+
+                    if remCall ~= nil then
+                        redis.call(unpack(remCall))
                     end
                 end
 
-                local addIndexCall
-                if index.type == "l" then
-                    addIndexCall = {"lpush", newIndexKey, keyId}
-                elseif index.type == "s" then
-                    addIndexCall = {"sadd", newIndexKey, keyId}
-                elseif index.type == "z" then
-                    local score
-                    if index.score == "NOW" then
-                        score = data.NOW
-                    else
-                        local newScoreV = map[index.score]
-                        if newScoreV ~= nil then
-                            score = newScoreV
+            end
+
+            if changed or data.forceAddIndex then
+                -- 设置新的索引
+                local newIndexKey = index.index
+                local requireAdd = true
+
+                for f, v in pairs(map) do
+                    if v == nil then
+                        map[f] = oldFieldValues[f]
+                    end
+                end
+
+                newIndexKey = string.gsub(newIndexKey, "${(.-)=(.-)}", function (tempField, tempValue)
+                    if strEqual(map[tempField], tempValue) == false then
+                        requireAdd = false
+                    end
+                    return tempField .. "=" .. tempValue
+                end)
+
+                if requireAdd then
+                    for j, f in ipairs(index.fields) do
+                        newIndexKey = string.gsub(newIndexKey, "${" .. f .. "}", map[f])
+                    end
+
+                    local addIndexCall
+                    if index.type == "l" then
+                        addIndexCall = {"lpush", newIndexKey, keyId}
+                    elseif index.type == "s" then
+                        addIndexCall = {"sadd", newIndexKey, keyId}
+                    elseif index.type == "z" then
+                        local score
+                        if index.score == "NOW" then
+                            score = data.NOW
                         else
-                            score = oldFieldValues[index.score]
+                            score = map[index.score]
+                        end
+
+                        score = toNum(score)
+                        if score ~= nil then
+                            addIndexCall = {"zadd", newIndexKey, score, keyId}
                         end
                     end
 
-                    score = toNum(score)
-                    if score ~= nil then
-                        addIndexCall = {"zadd", newIndexKey, score, keyId}
+                    if addIndexCall ~= nil then
+                        redis.call(unpack(addIndexCall))
+                        if index.expire ~= nil and index.expire >= 0 then
+                            redis.call("expire", newIndexKey, index.expire)
+                        end
                     end
                 end
 
-                if addIndexCall ~= nil then
-                    redis.call(unpack(addIndexCall))
-                    if index.expire ~= nil and index.expire >= 0 then
-                        redis.call("expire", newIndexKey, index.expire)
-                    end
-                end
             end
         end
     end

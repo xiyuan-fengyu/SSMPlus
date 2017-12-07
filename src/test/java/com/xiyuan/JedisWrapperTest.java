@@ -52,6 +52,16 @@ public class JedisWrapperTest {
 //        for (String id : ids) {
 //            System.out.println(id);
 //        }
+
+//        Set<String> ids = jedis.smembers("del:status=-1:tb_log:id");
+//        for (String id : ids) {
+//            System.out.println(id);
+//        }
+
+//        Set<String> ids = jedis.smembers("valid:status=0:tb_log:id");
+//        for (String id : ids) {
+//            System.out.println(id);
+//        }
     }
 
     public static void main(String[] args) {

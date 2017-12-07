@@ -42,7 +42,7 @@ public class RedisIndex {
         JsonArray fieldArr = new JsonArray();
         Matcher matcher = Pattern.compile("\\$\\{(.*?)\\}").matcher(index);
         while (matcher.find()) {
-            String field = matcher.group(1);
+            String field = matcher.group(1).split("=")[0];
             if (!fields.contains(field)) {
                 fieldArr.add(field);
                 fields.add(field);
@@ -78,14 +78,27 @@ public class RedisIndex {
         return temp;
     }
 
+    private static final Matcher fieldAndValueMatcher = Pattern.compile("\\$\\{(.+?)\\}").matcher("");
+
     public String createKey(Map<String, String> map) {
         String key = index;
-        for (String field : fields) {
-            Object value = map.get(field);
-            if (value == null) {
+        fieldAndValueMatcher.reset(key);
+        while (fieldAndValueMatcher.find()) {
+            String fieldAndValue = fieldAndValueMatcher.group(1);
+            int equalIndex = fieldAndValue.indexOf('=');
+            String field = equalIndex > -1 ? fieldAndValue.substring(0, equalIndex) : fieldAndValue;
+            Object temp = map.get(field);
+            String value = temp == null ? null : temp.toString();
+            if (value == null || (equalIndex > -1 && !value.equals(fieldAndValue.substring(equalIndex + 1)))) {
                 return null;
             }
-            key = key.replaceAll("\\$\\{" + field + "\\}", value.toString());
+
+            if (equalIndex == -1) {
+                key = fieldAndValueMatcher.replaceAll(value);
+            }
+            else {
+                key = fieldAndValueMatcher.replaceAll(fieldAndValue);
+            }
         }
         return key;
     }

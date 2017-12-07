@@ -14,5 +14,13 @@
     "index": "all:tb_log:id",
     "type": "z",
     "score": "create_time"
+  },
+  {
+    "index": "del:${status=-1}:tb_log:id",
+    "type": "s"
+  },
+  {
+    "index": "valid:${status=0}:tb_log:id",
+    "type": "s"
   }
 ]

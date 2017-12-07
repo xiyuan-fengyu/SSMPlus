@@ -56,6 +56,9 @@ SELECT * FROM tb_log WHERE user_id = ?;
 tb_user:id:${user_id}:${state}:tb_log:id 生成的查询语句为：
 SELECT * FROM tb_log WHERE user_id = ? AND state = ?;
 
+tb_user:id:${user_id}:${state=0}:tb_log:id 生成的查询语句为：
+SELECT * FROM tb_log WHERE user_id = ? AND state = 0;
+
 all:tb_log:id 生成的查询语句为：
 SELECT * FROM tb_log;    
 这种index会返回全表记录，需要谨慎使用

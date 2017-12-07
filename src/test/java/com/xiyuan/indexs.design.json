@@ -11,12 +11,12 @@
     "expire": "604800"
   },
   {
-    "index": "logsL:tb_log:id",
+    "index": "all:tb_log:id",
     "type": "List|l",
     "expire": "1d|1h|1m|1s * 7"
   },
   {
-    "index": "logsS:tb_log:id",
+    "index": "out:${type=1}:tb_log:id",
     "type": "Set|s",
     "expire": "60 * 60 * 24 * 7"
   }

@@ -122,7 +122,14 @@ public class DbManager {
             for (int i = 0; i < indexSplit.length; i++) {
                 String indexSplitItem = indexSplit[i];
                 if (indexSplitItem.matches("\\$\\{.+\\}")) {
-                    colVals.add(new ColVal(indexSplitItem.substring(2, indexSplitItem.length() - 1), keySplit[i]));
+                    String str = indexSplitItem.substring(2, indexSplitItem.length() - 1);
+                    int temp = str.indexOf('=');
+                    if (temp > -1) {
+                        colVals.add(new ColVal(str.substring(0, temp), str.substring(temp + 1)));
+                    }
+                    else {
+                        colVals.add(new ColVal(str, keySplit[i]));
+                    }
                 }
             }
             return colVals;

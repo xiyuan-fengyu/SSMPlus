@@ -75,7 +75,7 @@ public class IndexManager {
     }
 
     /**
-     * 仅仅返回 集合 类型的index，且 key 要符合 index 的模式
+     * 仅返回 集合 类型的index，且 key 要符合 index 的模式
      * @param key
      * @return
      */

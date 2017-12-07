@@ -109,7 +109,7 @@ public class JedisWrapper implements FactoryBean<Jedis>, MethodInterceptor {
             }
             else if ("hmset".equals(methodName)) {
                 override = true;
-                result = hmset(jedis, objects);
+                result = hmset(jedis, objects, false);
             }
             if (override) {
                 // 将更改插入到队列中，然后在 looper 中将更新同步到mysql
@@ -147,7 +147,7 @@ public class JedisWrapper implements FactoryBean<Jedis>, MethodInterceptor {
                     //从数据库加载数据，然后存入到redis，再返回结果
                     LinkedHashMap<String, String> dataInDB = dbManager.selectByKey(key);
                     if (dataInDB != null) {
-                        hmset(jedis, new Object[] {key, dataInDB});
+                        hmset(jedis, new Object[] {key, dataInDB}, true);
                         result = "hget".equals(methodName) ? dataInDB.get(objects[1].toString()) : dataInDB;
                     }
                 }
@@ -220,7 +220,7 @@ public class JedisWrapper implements FactoryBean<Jedis>, MethodInterceptor {
         RedisIndex keyIndex = indexManager.keyIndex(key);
         if (keyIndex != null) {
             int sizeInDB = dbManager.selectCountByIndexAndKey(index.index, key);
-            if (sizeInRedis != sizeInDB) {
+            if (sizeInRedis != sizeInDB && sizeInDB > 0) {
                 List<LinkedHashMap<String, String>> datasInDB = dbManager.selectByIndexAndKey(index.index, key);
                 if (!datasInDB.isEmpty()) {
                     for (LinkedHashMap<String, String> map : datasInDB) {
@@ -228,7 +228,7 @@ public class JedisWrapper implements FactoryBean<Jedis>, MethodInterceptor {
                         if (tempKey != null) {
                             hmset(jedis, new Object[]{
                                     tempKey, map
-                            });
+                            }, true);
                         }
                     }
                     return true;
@@ -252,7 +252,7 @@ public class JedisWrapper implements FactoryBean<Jedis>, MethodInterceptor {
         return jedis.eval(luaManager.hUpdate, 0, data.toString());
     }
 
-    private Object hmset(Jedis jedis, Object[] args) {
+    private Object hmset(Jedis jedis, Object[] args, boolean forceAddIndex) {
         String key = (String) args[0];
         JsonObject data = new JsonObject();
         data.addProperty("NOW", System.currentTimeMillis());
@@ -260,6 +260,9 @@ public class JedisWrapper implements FactoryBean<Jedis>, MethodInterceptor {
         data.addProperty("key", key);
         data.add("map", Util.gson.toJsonTree(args[1]));
         data.add("indexes", indexManager.findArrByKeyField(key, null));
+        if (forceAddIndex) {
+            data.addProperty("forceAddIndex", true);
+        }
         //System.out.println(data);
         return jedis.eval(luaManager.hUpdate, 0, data.toString());
     }
