@@ -213,6 +213,15 @@
         <!-- slf4j end -->
 
 
+        <!--ftl start-->
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>2.3.23</version>
+        </dependency>
+        <!--ftl end-->
+
+
         <!--jsp start-->
         <dependency>
             <groupId>javax.servlet.jsp</groupId>
@@ -230,15 +239,6 @@
             <version>1.2.5</version>
         </dependency>
         <!--jsp end-->
-
-
-        <!--ftl start-->
-        <!--<dependency>-->
-            <!--<groupId>org.freemarker</groupId>-->
-            <!--<artifactId>freemarker</artifactId>-->
-            <!--<version>2.3.23</version>-->
-        <!--</dependency>-->
-        <!--ftl end-->
 
 
         <!--jedis start-->

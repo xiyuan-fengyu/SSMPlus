@@ -26,26 +26,28 @@
 		">
 
 
+	<!--配置ftl的解析器 start-->
+	<bean id="freeMarkerConfigurer" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer"
+		  p:configLocation="classpath:property/freemarker.properties"
+		  p:templateLoaderPath="/WEB-INF/page/ftl/"
+	/>
+	<bean id="ftlViewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver"
+		  p:suffix=".ftl"
+		  p:contentType="text/html;charset=UTF-8"
+		  p:order="0"
+	/>
+	<!--配置ftl的解析器 end-->
+
+
 	<!--配置jsp的解析器 start-->
 	<bean id="jspResolver"
-		  class="org.springframework.web.servlet.view.UrlBasedViewResolver">
-		<property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
-		<property name="prefix" value="/WEB-INF/page/jsp/" />
-		<property name="suffix" value=".jsp" />
-	</bean>
+		  class="org.springframework.web.servlet.view.UrlBasedViewResolver"
+		  p:viewClass="org.springframework.web.servlet.view.JstlView"
+		  p:prefix="/WEB-INF/page/jsp/"
+		  p:suffix=".jsp"
+		  p:order="1"
+	/>
 	<!--配置jsp的解析器 end-->
-
-
-	<!--配置ftl的解析器 start-->
-	<!--<bean id="freeMarkerConfigurer" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">-->
-		<!--<property name="templateLoaderPath" value="/WEB-INF/page/ftl/"/>-->
-		<!--<property name="defaultEncoding" value="UTF-8"/>-->
-	<!--</bean>-->
-	<!--<bean id="ftlViewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">-->
-		<!--<property name="suffix" value=".ftl"/>-->
-		<!--<property name="contentType" value="text/html;charset=UTF-8"/>-->
-	<!--</bean>-->
-	<!--配置ftl的解析器 end-->
 
 
 	<!--文件上传 -->
