@@ -36,9 +36,6 @@ if data.method == "hset" then
             for j, f in ipairs(item.fields) do
                 fields[f] = j
             end
-            if item.score ~= nil and item.score ~= "NOW" then
-                fields[item.score] = 0
-            end
         end
     end
 
@@ -141,10 +138,6 @@ elseif data.method == "hmset" then
             table.insert(changeIndexes, item)
             for j, f in ipairs(item.fields) do
                 fields[f] = j
-                fieldsCount = fieldsCount + 1
-            end
-            if item.score ~= nil and item.score ~= "NOW" then
-                fields[item.score] = 0
                 fieldsCount = fieldsCount + 1
             end
         end

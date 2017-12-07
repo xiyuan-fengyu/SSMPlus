@@ -1,8 +1,5 @@
 package com.xiyuan.template.redis.index;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-
 /**
  * Created by xiyuan_fengyu on 2017/12/4 14:14.
  */
@@ -14,6 +11,11 @@ public class SortedSetIndex extends RedisIndex {
         super(index, type, expire);
         this.score = score == null || "".equals(score) ? "NOW" : score;
         config.addProperty("score", this.score);
+
+        if (!this.score.equals("NOW") && !this.fields.contains(this.score)) {
+            this.fields.add(this.score);
+            config.get("fields").getAsJsonArray().add(this.score);
+        }
     }
 
 }

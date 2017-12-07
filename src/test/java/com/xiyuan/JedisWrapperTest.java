@@ -1,5 +1,6 @@
 package com.xiyuan;
 
+import com.xiyuan.template.util.DateUtil;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +24,14 @@ public class JedisWrapperTest {
     private Jedis jedis;
 
     public void execute() {
+
+//        jedis.hset("tb_log:id:2", "create_time", "2017-12-07 10:36:19");
+
 //        String id = "2";
 //        Map<String, String> map = new HashMap<>();
 //        map.put("id", id);
 //        map.put("content", "hmset test; db test; " + System.currentTimeMillis());
-//        map.put("user_id", "11");
+//        map.put("user_id", "10");
 //        map.put("create_time", DateUtil.format(new Date()));
 //        logger.info(jedis.hmset("tb_log:id:" + id, map));
 
