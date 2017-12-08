@@ -52,3 +52,27 @@
 --    return field .. "=" ..value
 --end)
 --return temp
+
+
+-- 动态执行一段字符串代码
+--local temp = 12
+--local funcStr = "return " .. temp .. " >= 12"
+--local res = loadstring(funcStr)(temp)
+--return res
+
+
+
+--local function parseIndex(index, data)
+--
+--end
+--
+--local log = {
+--    id = 1,
+--    content = "just test",
+--    user_id = 10,
+--    create_time = "2017-12-08 10:14:28",
+--    status = 0
+--}
+--
+--local index = "some:${}"
+
