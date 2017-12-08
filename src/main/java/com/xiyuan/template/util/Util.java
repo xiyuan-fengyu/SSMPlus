@@ -48,7 +48,7 @@ public class Util {
 
     public static final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
 
-    public static final Gson gsonFormat = new GsonBuilder().setPrettyPrinting().create();
+    public static final Gson gsonFormat = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").setPrettyPrinting().create();
 
     public static JsonElement toJsonElement(String json) {
         return jsonParser.parse(json);
