@@ -1,7 +1,5 @@
 package com.xiyuan;
 
-import com.xiyuan.template.util.DateUtil;
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +8,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 
-import java.util.*;
+import java.util.Scanner;
+import java.util.Set;
 
 /**
  * Created by xiyuan_fengyu on 2017/12/1 13:53.
@@ -65,7 +64,6 @@ public class JedisWrapperTest {
     }
 
     public static void main(String[] args) {
-        PropertyConfigurator.configure(JedisWrapperTest.class.getClassLoader().getResource("property/log4j.properties"));
         ApplicationContext context = new ClassPathXmlApplicationContext(
                 "spring/applicationContext.xml",
                 "spring/springServlet.xml"
