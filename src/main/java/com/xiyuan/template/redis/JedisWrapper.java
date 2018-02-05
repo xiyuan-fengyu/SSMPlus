@@ -87,6 +87,7 @@ public class JedisWrapper implements FactoryBean<Jedis>, MethodInterceptor {
         jedisCache.clear();
 
         keyLoadFromDbCache.clear();
+        jedisPool.destroy();
     }
 
     @SuppressWarnings("unchecked")
