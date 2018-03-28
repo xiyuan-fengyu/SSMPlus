@@ -136,19 +136,19 @@
 
 
 	<!--mongodb 配置 start-->
-	<!--<mongo:mongo-client id="mongoClient" replica-set="${mongo.url}" credentials="${mongo.credentials}">-->
-		<!--<mongo:client-options-->
-				<!--connections-per-host="${mongo.connectionsPerHost}"-->
-				<!--threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"-->
-				<!--connect-timeout="${mongo.connectTimeout}"-->
-				<!--max-wait-time="${mongo.maxWaitTime}"-->
-				<!--socket-keep-alive="${mongo.socketKeepAlive}"-->
-				<!--socket-timeout="${mongo.socketTimeout}"-->
-		<!--/>-->
-	<!--</mongo:mongo-client>-->
-	<!--<mongo:db-factory dbname="${mongo.db}" mongo-ref="mongoClient"/>-->
-	<!--<mongo:template id="mongoTemplate" db-factory-ref="mongoDbFactory"/>-->
-	<!--<mongo:repositories base-package="com.xiyuan.*"/>-->
+	<mongo:mongo-client id="mongoClient" replica-set="${mongo.url}" credentials="${mongo.credentials}">
+		<mongo:client-options
+				connections-per-host="${mongo.connectionsPerHost}"
+				threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
+				connect-timeout="${mongo.connectTimeout}"
+				max-wait-time="${mongo.maxWaitTime}"
+				socket-keep-alive="${mongo.socketKeepAlive}"
+				socket-timeout="${mongo.socketTimeout}"
+		/>
+	</mongo:mongo-client>
+	<mongo:db-factory dbname="${mongo.db}" mongo-ref="mongoClient"/>
+	<mongo:template id="mongoTemplate" db-factory-ref="mongoDbFactory"/>
+	<mongo:repositories base-package="com.xiyuan.*"/>
 	<!--mongodb 配置 end-->
 
 </beans>
