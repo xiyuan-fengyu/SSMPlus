@@ -8,6 +8,7 @@
 	   xmlns:p="http://www.springframework.org/schema/p"
 	   xmlns:cache="http://www.springframework.org/schema/cache"
 	   xmlns:task="http://www.springframework.org/schema/task"
+	   xmlns:mongo="http://www.springframework.org/schema/data/mongo"
 	   xsi:schemaLocation="
 		http://www.springframework.org/schema/beans
 		http://www.springframework.org/schema/beans/spring-beans.xsd
@@ -23,6 +24,8 @@
 		http://www.springframework.org/schema/cache/spring-cache.xsd
 		http://www.springframework.org/schema/task
 		http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/data/mongo
+       http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
 		">
 
 	<!-- 设置扫描@Controller,@Component, @Repository, @Transactional等注解的目录 -->
@@ -45,6 +48,7 @@
 			<list>
 				<value>classpath:property/database.properties</value>
 				<value>classpath:property/redis.properties</value>
+				<value>classpath:property/mongodb.properties</value>
 			</list>
 		</property>
 	</bean>
@@ -130,5 +134,21 @@
 	<bean id="jedis" class="com.xiyuan.template.redis.JedisWrapper" p:jedisPool-ref="jedisPool"/>
 	<!--jedis 配置 end-->
 
+
+	<!--mongodb 配置 start-->
+	<!--<mongo:mongo-client id="mongoClient" replica-set="${mongo.url}" credentials="${mongo.credentials}">-->
+		<!--<mongo:client-options-->
+				<!--connections-per-host="${mongo.connectionsPerHost}"-->
+				<!--threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"-->
+				<!--connect-timeout="${mongo.connectTimeout}"-->
+				<!--max-wait-time="${mongo.maxWaitTime}"-->
+				<!--socket-keep-alive="${mongo.socketKeepAlive}"-->
+				<!--socket-timeout="${mongo.socketTimeout}"-->
+		<!--/>-->
+	<!--</mongo:mongo-client>-->
+	<!--<mongo:db-factory dbname="${mongo.db}" mongo-ref="mongoClient"/>-->
+	<!--<mongo:template id="mongoTemplate" db-factory-ref="mongoDbFactory"/>-->
+	<!--<mongo:repositories base-package="com.xiyuan.*"/>-->
+	<!--mongodb 配置 end-->
 
 </beans>
