@@ -124,7 +124,7 @@ public class JedisAutoRelease implements FactoryBean<Jedis>, MethodInterceptor {
 
         @Override
         public long getDelay(TimeUnit unit) {
-            return unit.convert(this.releaseAt == -1 ? releaseDelay : this.releaseAt - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+            return this.releaseAt == -1 ? releaseDelay : this.releaseAt - System.currentTimeMillis();
         }
 
         @Override
