@@ -49,11 +49,6 @@
         <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
     </listener>
 
-    <error-page>
-        <error-code>404</error-code>
-        <location>/page/error/404.jsp</location>
-    </error-page>
-
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
