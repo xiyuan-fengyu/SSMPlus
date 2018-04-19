@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public class ResponseUtil {
 
-    private static Map<String, Object> create(boolean success, String message, Object data, String error) {
+    public static Map<String, Object> create(boolean success, String message, Object data, String error) {
         Map<String, Object> res = new LinkedHashMap<>();
         res.put("success", success);
         res.put("message", message);
