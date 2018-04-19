@@ -17,6 +17,10 @@ public class ResponseUtil {
         return res;
     }
 
+    public static Map<String, Object> create(ResponseMap responseMap) {
+        return create(responseMap.success, responseMap.message, responseMap.data, responseMap.error);
+    }
+
     public static Map<String, Object> success(String message, Object data) {
         return create(true, message, data, null);
     }
