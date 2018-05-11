@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="OFF" monitorInterval="1800">
     <properties>
-        <property name="LOG_HOME" value="${sys:catalina.base}/logs"/>
+        <!-- $ {sys:catalina.base} -->
+        <property name="LOG_HOME" value="/logs"/>
         <property name="FILE_NAME">ssmplus</property>
     </properties>
 
