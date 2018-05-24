@@ -1,0 +1,18 @@
+[
+  {
+    "$match": {
+      "_id": {
+        "$in": "${0}"
+      },
+      "specialDates": {
+        "$type": "array"
+      }
+    }
+  },
+  {
+    "$project": {
+      "id": 1,
+      "specialDates": 1
+    }
+  }
+]
