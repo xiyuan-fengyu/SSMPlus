@@ -97,7 +97,7 @@ public class MongoShell {
     }
 
     public static void main(String[] args) {
-        Object shell = create("mongo/aggregate_specialDates.json",
+        Object shell = create("mongo/aggregate_test.json",
                 Arrays.asList("1XBI1_1526883863482", "jUm6V_1526883951882", "2506j_1526885621644")
         );
         System.out.println(Util.gsonFormat.toJson(shell));
