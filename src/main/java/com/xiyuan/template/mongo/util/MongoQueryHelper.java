@@ -3,6 +3,7 @@ package com.xiyuan.template.mongo.util;
 import com.xiyuan.template.util.Util;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by xiyuan_fengyu on 2018/3/28 16:16.
@@ -26,23 +27,29 @@ public class MongoQueryHelper {
         return con;
     }
 
-    @SuppressWarnings("unchecked")
     public static Map<String, Object> and(Map<String, Object> ...cons) {
+        return and(Arrays.asList(cons));
+    }
+
+    public static Map<String, Object> and(Collection<Map<String, Object>> cons) {
         Map<String, Object> con = new LinkedHashMap<>();
         List<Object> subCons = new ArrayList<>();
         if (cons != null) {
-            subCons.addAll(Arrays.asList(cons));
+            subCons.addAll(cons);
         }
         con.put("$and", subCons);
         return con;
     }
 
-    @SuppressWarnings("unchecked")
     public static Map<String, Object> or(Map<String, Object> ...cons) {
+        return or(Arrays.asList(cons));
+    }
+
+    public static Map<String, Object> or(Collection<Map<String, Object>> cons) {
         Map<String, Object> con = new LinkedHashMap<>();
         List<Object> subCons = new ArrayList<>();
         if (cons != null) {
-            subCons.addAll(Arrays.asList(cons));
+            subCons.addAll(cons);
         }
         con.put("$or", subCons);
         return con;
@@ -50,40 +57,58 @@ public class MongoQueryHelper {
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> not(Map<String, Object> con) {
-        Map<String, Object> notCon = new LinkedHashMap<>();
-        String keyOrOperator = con.keySet().toArray()[0].toString();
-        if (keyOrOperator.startsWith("$")) {
-            List<Object> newSubCons = new ArrayList<>();
-            for (Map<String, Object> subCon : (List<Map<String, Object>>) con.get(keyOrOperator)) {
-                newSubCons.add(not(subCon));
-            }
-            notCon.put(keyOrOperator.equals("$and") ? "$or" : "$and", newSubCons);
+        if (con == null || con.isEmpty()) return null;
+        Set<Map.Entry<String, Object>> entries = con.entrySet();
+        if (entries.size() > 1) {
+            List<Map<String, Object>> subNotCons = entries.stream().map(entry -> {
+                HashMap<String, Object> subCon = new HashMap<>();
+                subCon.put(entry.getKey(), entry.getValue());
+                return not(subCon);
+            }).collect(Collectors.toList());
+            return or(subNotCons);
         }
         else {
-            Map<String, Object> subCons = (Map<String, Object>) con.get(keyOrOperator);
-            String subKeyOrOperator = subCons.keySet().toArray()[0].toString();
-            switch (subKeyOrOperator) {
-                case "$and":
-                case "$or":
+            Map<String, Object> notCon = new LinkedHashMap<>();
+            String keyOrOperator = con.keySet().toArray()[0].toString();
+            if (keyOrOperator.startsWith("$")) {
+                if (keyOrOperator.equals("$and") || keyOrOperator.equals("$or")) {
                     List<Object> newSubCons = new ArrayList<>();
-                    for (Map<String, Object> subCon : (List<Map<String, Object>>) subCons.get(subKeyOrOperator)) {
-                        Map<String, Object> newSubCon = new LinkedHashMap<>();
-                        newSubCon.put("$not", subCon);
-                        newSubCons.add(newSubCon);
+                    for (Map<String, Object> subCon : (List<Map<String, Object>>) con.get(keyOrOperator)) {
+                        newSubCons.add(not(subCon));
                     }
-                    notCon.put(keyOrOperator, newSubCons);
-                    break;
-                case "$not":
-                    notCon.put(keyOrOperator, subCons.get(subKeyOrOperator));
-                    break;
-                default:
-                    Map<String, Object> newSubCon = new LinkedHashMap<>();
-                    newSubCon.put("$not", subCons);
-                    notCon.put(keyOrOperator, newSubCon);
-                    break;
+                    notCon.put(keyOrOperator.equals("$and") ? "$or" : "$and", newSubCons);
+                }
+                else if (keyOrOperator.equals("$not")){
+                    return (Map<String, Object>) con.get(keyOrOperator);
+                }
+                else {
+                    List<String> inverseOperators = Arrays.asList(
+                            "$eq", "$ne",
+                            "$in", "$nin",
+                            "$lt", "$gte",
+                            "$lte", "$gt"
+                    );
+                    for (int i = 0; i < inverseOperators.size(); i++) {
+                        if (inverseOperators.get(i).equals(keyOrOperator)) {
+                            notCon.put(inverseOperators.get(i + (i % 2 == 0 ? 1 : -1)), con.get(keyOrOperator));
+                            return notCon;
+                        }
+                    }
+                    notCon.put("$not", con.get(keyOrOperator));
+                    return notCon;
+                }
             }
+            else {
+                Object subCons = con.get(keyOrOperator);
+                if (subCons instanceof Map) {
+                    notCon.put(keyOrOperator, not((Map<String, Object>) subCons));
+                }
+                else {
+                    notCon.put("$not", subCons);
+                }
+            }
+            return notCon;
         }
-        return notCon;
     }
 
     public static void main(String[] args) {
