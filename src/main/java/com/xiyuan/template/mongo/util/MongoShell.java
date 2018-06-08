@@ -1,5 +1,6 @@
 package com.xiyuan.template.mongo.util;
 
+import com.xiyuan.template.util.JsonUtil;
 import com.xiyuan.template.util.Util;
 import org.bson.Document;
 
@@ -19,71 +20,8 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unchecked")
 public class MongoShell {
 
-    private static final Matcher placeholderM = Pattern.compile("\\$\\{(\\d+)}").matcher("");
-
-    private static final Map<String, String> shells = new HashMap<>();
-
-    private static String getShell(String resource) {
-        return shells.computeIfAbsent(resource, key -> {
-            try (InputStream in = MongoShell.class.getClassLoader().getResourceAsStream(resource)) {
-                if (in != null) {
-                    byte[] bytes = new byte[in.available()];
-                    if (in.read(bytes) > -1) {
-                        return new String(bytes, StandardCharsets.UTF_8);
-                    }
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            return "";
-        });
-    }
-
-    private static void filler(Object obj, Object params[]) {
-        if (obj instanceof Map) {
-            for (Map.Entry<String, Object> entry : ((Map<String, Object>) obj).entrySet()) {
-                Object value = entry.getValue();
-                if (value instanceof String) {
-                    placeholderM.reset((String) value);
-                    if (placeholderM.find()) {
-                        int index = Integer.parseInt(placeholderM.group(1));
-                        if (index < params.length) {
-                            entry.setValue(params[index]);
-                        }
-                    }
-                }
-                else {
-                   filler(value, params);
-                }
-            }
-        }
-        else if (obj instanceof List) {
-            List list = (List) obj;
-            for (int i = 0, size = list.size(); i < size; i++) {
-                Object subObj = list.get(i);
-                if (subObj instanceof Map) {
-                    filler(subObj, params);
-                }
-                else if (subObj instanceof String) {
-                    placeholderM.reset((String) subObj);
-                    if (placeholderM.find()) {
-                        int index = Integer.parseInt(placeholderM.group(1));
-                        if (index < params.length) {
-                            list.set(i, params[index]);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private static Object create(String resource, Object ...params) {
-        Object shell = Util.gson.fromJson(getShell(resource), Object.class);
-        if (params != null && params.length > 0) {
-            filler(shell, params);
-        }
-        return shell;
+        return JsonUtil.parseResourceTemplate(resource, params);
     }
 
     public static Document doc(String resource, Object ...params) {
