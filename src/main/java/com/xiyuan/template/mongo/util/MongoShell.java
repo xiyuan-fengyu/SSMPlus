@@ -2,6 +2,7 @@ package com.xiyuan.template.mongo.util;
 
 import com.xiyuan.template.util.JsonTemplate;
 import com.xiyuan.template.util.Util;
+import org.apache.logging.log4j.core.util.JsonUtils;
 import org.bson.Document;
 
 import java.util.Arrays;
@@ -30,10 +31,17 @@ public class MongoShell {
     }
 
     public static void main(String[] args) {
-        Object shell = create("mongo/aggregate_test.json",
+        Object shell = create("mongo/aggregateTest.json",
                 Arrays.asList("1XBI1_1526883863482", "jUm6V_1526883951882", "2506j_1526885621644")
         );
-        System.out.println(Util.gsonFormat.toJson(shell));
+        System.out.println(JsonTemplate.gsonPretty.toJson(shell));
+
+        long now = System.currentTimeMillis();
+        long oneDay = 1000L * 3600 * 24;
+        {
+            Object obj = create("mongo/queryByIdCreateTime.json", ".*_.*", now - oneDay * 7, now);
+            System.out.println(JsonTemplate.gsonPretty.toJson(obj));
+        }
     }
 
 }
