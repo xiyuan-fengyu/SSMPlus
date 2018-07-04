@@ -274,7 +274,12 @@ public class JsonTemplate {
             if (condition == null) return true;
             try {
                 Object res = jsEngine.eval(condition, bindings);
-                return res != null && !Boolean.FALSE.equals(res);
+                if (res == null || Boolean.FALSE.equals(res)) return false;
+                if (res instanceof Number) {
+                    double d = ((Number) res).doubleValue();
+                    return d != 0 && !Double.isNaN(d);
+                }
+                return !(res instanceof String) || !((String) res).isEmpty();
             }
             catch (Exception e) {
                 e.printStackTrace();
