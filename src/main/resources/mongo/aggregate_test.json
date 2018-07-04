@@ -2,7 +2,7 @@
   {
     "$match": {
       "_id": {
-        "$in": "${0}"
+        "$in": "{{$0}}"
       },
       "specialDates": {
         "$type": "array"

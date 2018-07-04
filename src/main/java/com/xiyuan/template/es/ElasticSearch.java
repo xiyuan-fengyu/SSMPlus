@@ -1,6 +1,6 @@
 package com.xiyuan.template.es;
 
-import com.xiyuan.template.util.JsonUtil;
+import com.xiyuan.template.util.JsonTemplate;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.*;
@@ -36,11 +36,11 @@ public class ElasticSearch {
     }
 
     public List<Map> eval(String jsonStr, Object ...params) {
-        return evalObj(JsonUtil.parseTemplate(jsonStr, params));
+        return evalObj(JsonTemplate.parseTemplate(jsonStr, params));
     }
 
     public List<Map> evalResource(String resource, Object ...params) {
-        return evalObj(JsonUtil.parseResourceTemplate(resource, params));
+        return evalObj(JsonTemplate.parseResourceTemplate(resource, params));
     }
 
     private List<Map> evalObj(Object obj) {
@@ -72,11 +72,11 @@ public class ElasticSearch {
             dataStrBuilder = new StringBuilder();
             if (data instanceof List) {
                 for (Object o : ((List) data)) {
-                    dataStrBuilder.append(JsonUtil.gson.toJson(o)).append('\n');
+                    dataStrBuilder.append(JsonTemplate.gson.toJson(o)).append('\n');
                 }
             }
             else {
-                dataStrBuilder.append(JsonUtil.gson.toJson(data)).append('\n');
+                dataStrBuilder.append(JsonTemplate.gson.toJson(data)).append('\n');
             }
         }
 
@@ -102,7 +102,7 @@ public class ElasticSearch {
             HttpEntity resEntity = res.getEntity();
             String resStr = EntityUtils.toString(resEntity);
             EntityUtils.consume(resEntity);
-            return JsonUtil.gson.fromJson(resStr, Map.class);
+            return JsonTemplate.gson.fromJson(resStr, Map.class);
         } catch (IOException e) {
             e.printStackTrace();
             return new HashMap();

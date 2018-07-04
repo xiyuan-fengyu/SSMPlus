@@ -1,0 +1,44 @@
+{
+  "raw({{this is a raw key}})": "value",
+  "testMapKey": "{{$0$.aaa}}",
+  "testArray": "{{$1$.[0,1,2]}}",
+  "{{$1.get(0).containsKey('a') ? 'a-key'}}": "{{$1$.[0].a}}",
+  "{{$1.get(0).containsKey('d') ? 'd-key'}}": "{{$1$.[0].d}}",
+  "conditionTest": [
+    {
+      "{{$1.size() > 0 ?}}": {
+        "id": "123",
+        "name": "test"
+      }
+    },
+    {
+      "{{$1.get(0).containsKey('a') ? 'a-key'}}": "{{$1$.[0].a}}",
+      "{{$1.get(0).containsKey('d') ? 'd-key'}}": "{{$1$.[0].d}}"
+    },
+    {
+      "{{$1.get(0).containsKey('d') ? 'd-key'}}": "{{$1$.[0].d}}"
+    },
+    "divider",
+    "{{$0.size() >= 3 ? $0}}",
+    "{{$0.size() >= 3 ? $0}}",
+    "{{$1.size() >= 1 ? $1$.[0]}}",
+    "{{$1.size() >= 100 ? $1}}"
+  ],
+  "{{$0}}": null,
+  "{{$1$.[0]}}": "a|c",
+  "testArr": [
+    {
+      "{{$0}}": "a.*"
+    },
+    {
+      "{{$0}}": "-:a.*"
+    },
+    {
+      "{{$0}}": ["b.*", "-:a.*"]
+    }
+  ],
+  "testArrSub": [1, "{{$1}}", 3],
+  "testArrSubUnwind": [1, "[[$1]]", 3],
+  "testArrSubCut 0,1,2": [1, "{{$1$.[0,1,2]}}", 3],
+  "testArrSubCutUnwind 0,1,2": [1, "[[$1$.[0,1,2]]]", 3]
+}

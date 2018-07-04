@@ -1,17 +1,12 @@
 package com.xiyuan.template.mongo.util;
 
-import com.xiyuan.template.util.JsonUtil;
+import com.xiyuan.template.util.JsonTemplate;
 import com.xiyuan.template.util.Util;
 import org.bson.Document;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -21,7 +16,7 @@ import java.util.stream.Collectors;
 public class MongoShell {
 
     private static Object create(String resource, Object ...params) {
-        return JsonUtil.parseResourceTemplate(resource, params);
+        return JsonTemplate.parseResourceTemplate(resource, params);
     }
 
     public static Document doc(String resource, Object ...params) {
