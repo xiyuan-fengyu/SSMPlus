@@ -295,19 +295,19 @@ public class JsonTemplate {
 
     }
 
-    public static void main(String[] args) {
-        Map<String, Object> $0 = new HashMap<>();
-        $0.put("aaa", "aaa");
-        $0.put("bbb", "bbb");
-        $0.put("ccc", "ccc");
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("a", "aaa");
-        map.put("b", "bbb");
-        map.put("c", "ccc");
-        List<Object> $1 = Arrays.asList(map, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-        Object obj = parseResourceTemplate("jsonTemplate/0.json", $0, $1);
-        System.out.println(gsonPretty.toJson(obj));
-    }
+//    public static void main(String[] args) {
+//        Map<String, Object> $0 = new HashMap<>();
+//        $0.put("aaa", "aaa");
+//        $0.put("bbb", "bbb");
+//        $0.put("ccc", "ccc");
+//
+//        Map<String, Object> map = new HashMap<>();
+//        map.put("a", "aaa");
+//        map.put("b", "bbb");
+//        map.put("c", "ccc");
+//        List<Object> $1 = Arrays.asList(map, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+//        Object obj = parseResourceTemplate("jsonTemplate/0.json", $0, $1);
+//        System.out.println(gsonPretty.toJson(obj));
+//    }
 
 }
