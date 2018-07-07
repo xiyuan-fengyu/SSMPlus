@@ -2,8 +2,6 @@ package com.xiyuan.template.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.jayway.jsonpath.JsonPath;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -14,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Created by xiyuan_fengyu on 2018/6/8 9:16.
@@ -29,6 +26,8 @@ public class JsonTemplate {
     private static final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName("js");
 
     private static final Map<String, String> resourceCaches = new HashMap<>();
+
+    private static final IgnoreObject ignoreObject = new IgnoreObject();
 
     public static Object parseTemplate(String template, Object ...params) {
         return filler(gson.fromJson(template, Object.class), params);
@@ -78,7 +77,9 @@ public class JsonTemplate {
         return obj;
     }
 
-    private static Map<String, Object> fillMapValue(Map<String, Object> map, Map<String, Object> context) {
+    private static Object fillMapValue(Map<String, Object> map, Map<String, Object> context) {
+        if (map.isEmpty()) return map;
+
         Map<String, Object> fillerObj = new LinkedHashMap<>();
 
         for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -86,65 +87,55 @@ public class JsonTemplate {
             Object value = entry.getValue();
 
             Placeholder placeholder = new Placeholder(key);
-            if (!placeholder.raw) {
-                if (placeholder.conditionValid(context)) {
-                    if (placeholder.paramIndexOrName == null) {
-                        Object filledValue = filler(value, context);
-                        if (placeholder.key != null) {
-                            fillerObj.put(placeholder.key, filledValue);
-                        }
-                        else if (filledValue instanceof Map) {
-                            fillerObj.putAll((Map) filledValue);
+            if (placeholder.raw) {
+                fillerObj.put(placeholder.rawStr, filler(value, context));
+            }
+            else {
+                ConditionValueRes evalRes = placeholder.eval(context);
+                if (evalRes.condition) {
+                    if (placeholder.foreach) {
+                        Object foreachRes = fillForeach(placeholder, evalRes, value, context);
+                        if (foreachRes instanceof List) {
+                            if (map.size() == 1 && foreachRes instanceof UnwindArrayList) return foreachRes;
+                            for (Object obj : (List) foreachRes) {
+                                if (obj instanceof Map) {
+                                    fillerObj.putAll((Map<String, ?>) obj);
+                                }
+                            }
                         }
                     }
-                    else {
-                        List<Object> unwindMaps = new ArrayList<>();
-                        if (placeholder.foreach) {
-                            unwindMaps.addAll(fillForeach(placeholder, value, context));
+                    else if (evalRes.value != null) {
+                        if (evalRes.value instanceof Map) {
+                            fillerObj.putAll((Map<String, ?>) evalRes.value);
                         }
-                        else {
-                            Object placeholderValue = placeholder.value(context);
-                            if (placeholderValue instanceof Map) {
-                                unwindMaps.add(placeholderValue);
-                            }
-                            else if (isBasicOrStringType(placeholderValue)) {
-                                fillerObj.put(placeholderValue.toString(), filler(value, context));
+                        else if (evalRes.value instanceof Iterable) {
+                            for (Object obj : (Iterable) evalRes.value) {
+                                if (obj instanceof Map) {
+                                    fillerObj.putAll((Map<String, ?>) obj);
+                                }
                             }
                         }
-
-                        if (unwindMaps.size() > 0) {
-                            for (Object item : unwindMaps) {
-                                if (item instanceof Map) {
-                                    Map<String, Object> unwindMap = (Map<String, Object>) item;
-                                    Set<String> unwindMapKeys = unwindMap.keySet();
-                                    List<String> unwindKeys = new ArrayList<>();
-                                    if (value == null) {
-                                        // 全展开
-                                        unwindKeys.addAll(unwindMapKeys);
-                                    } else if (value instanceof String) {
-                                        // 单个展开规则
-                                        keyFilter(unwindKeys, unwindMapKeys, (String) value);
-                                    } else if (value instanceof List) {
-                                        // 多个展开规则
-                                        for (String exp : (List<String>) value) {
-                                            keyFilter(unwindKeys, unwindMapKeys, exp);
-                                        }
-                                    }
-
-                                    for (String unwindKey : unwindKeys) {
-                                        fillerObj.put(unwindKey, unwindMap.get(unwindKey));
-                                    }
+                        else if (isBasicOrStringType(evalRes.value)) {
+                            fillerObj.put(evalRes.value.toString(), filler(value, context));
+                        }
+                    }
+                    else if (value != null) {
+                        Object subValue = filler(value, context);
+                        if (subValue instanceof Map) {
+                            fillerObj.putAll((Map<String, ?>) subValue);
+                        }
+                        else if (subValue instanceof Iterable) {
+                            for (Object obj : (Iterable) subValue) {
+                                if (obj instanceof Map) {
+                                    fillerObj.putAll((Map<String, ?>) obj);
                                 }
                             }
                         }
                     }
                 }
             }
-            else {
-                fillerObj.put(placeholder.rawStr, filler(value, context));
-            }
         }
-        return fillerObj;
+        return fillerObj.isEmpty() ? ignoreObject : fillerObj;
     }
 
     private static boolean isBasicOrStringType(Object obj) {
@@ -154,60 +145,55 @@ public class JsonTemplate {
                 || obj instanceof Boolean;
     }
 
-    private static List<Object> fillForeach(Placeholder foreach,  Object valueTemplate, Map<String, Object> context) {
-        List<Object> res = foreach.unwind ? new UnwindArrayList() : new ArrayList<>();
-        Object foreachValue = foreach.value(context);
-        if (foreachValue instanceof Map) {
-            ((Map<String, Object>) foreachValue).forEach((key, value) -> {
+    private static Object fillForeach(Placeholder placeholder, ConditionValueRes evalValue,  Object valueTemplate, Map<String, Object> context) {
+        if (!evalValue.condition) return ignoreObject;
+
+        List<Object> res = placeholder.unwind ? new UnwindArrayList() : new ArrayList<>();
+        if (evalValue.value instanceof Map) {
+            ((Map<String, Object>) evalValue.value).forEach((key, value) -> {
                 Map<String, Object> subContext = new HashMap<>(context);
-                subContext.put("$" + foreach.foreachIndexOrKeyName, key);
-                subContext.put("$" + foreach.foreachValueName, value);
+                subContext.put("$" + placeholder.foreachIndexOrKeyName, key);
+                subContext.put("$" + placeholder.foreachValueName, value);
                 Object subValue = filler(valueTemplate, subContext);
                 if (subValue != null) res.add(subValue);
             });
         }
-        else if (foreachValue instanceof Iterable) {
+        else if (evalValue.value instanceof Iterable) {
             int index = 0;
-            for (Object item : (Iterable<Object>) foreachValue) {
+            for (Object item : (Iterable<Object>) evalValue.value) {
                 Map<String, Object> subContext = new HashMap<>(context);
-                subContext.put("$" + foreach.foreachIndexOrKeyName, index);
-                subContext.put("$" + foreach.foreachValueName, item);
+                subContext.put("$" + placeholder.foreachIndexOrKeyName, index);
+                subContext.put("$" + placeholder.foreachValueName, item);
                 Object subValue = filler(valueTemplate, subContext);
                 if (subValue != null) res.add(subValue);
                 index++;
             }
         }
+        else return ignoreObject;
         return res;
     }
 
-    private static List<Object> fillListValue(List<Object> list, Map<String, Object> context) {
+    private static Object fillListValue(List<Object> list, Map<String, Object> context) {
+        if (list.isEmpty()) return list;
+
         List<Object> fillerList = new ArrayList();
         for (Object o : list) {
             if (o instanceof String) {
                 Placeholder placeholder = new Placeholder((String) o);
                 if (placeholder.raw) fillerList.add(placeholder.rawStr);
                 else {
-                    if (placeholder.conditionValid(context)) {
-                        Object placeholderValue = placeholder.value(context);
-                        if (placeholder.unwind && placeholderValue instanceof Iterable) {
-                            Iterable it = (Iterable) placeholderValue;
-                            for (Object obj : it) {
-                                fillerList.add(obj);
-                            }
+                    Object fillRes = fillStringValue(placeholder, context);
+                    if (fillRes != ignoreObject) {
+                        if (fillRes instanceof UnwindArrayList) {
+                            fillerList.addAll(((UnwindArrayList) fillRes));
                         }
-                        else {
-                            fillerList.add(placeholderValue);
-                        }
+                        else fillerList.add(fillRes);
                     }
                 }
             }
             else {
                 Object filled = filler(o, context);
-                if (filled == null
-                        || (filled instanceof Map && ((Map) filled).isEmpty())) {
-                    // ignore
-                }
-                else {
+                if (filled != ignoreObject) {
                     if (filled instanceof UnwindArrayList) {
                         fillerList.addAll((UnwindArrayList) filled);
                     }
@@ -215,86 +201,77 @@ public class JsonTemplate {
                 }
             }
         }
-        return fillerList;
+        return fillerList.isEmpty() ? ignoreObject : fillerList;
     }
-
-//    private static List<Object> listSlice(String placeholder, Object[] params) {
-//        List<Object> subList = new ArrayList<>();
-//
-//        String temp = placeholder;
-//        temp = temp.substring(2, temp.length() - 2);
-//        int paramI = Integer.parseInt(temp.substring(Math.max(0, placeholder.indexOf('?') + 1), temp.indexOf('[')).trim().replaceAll("\\$", "").trim());
-//        String [] slices = temp.substring(temp.indexOf('[') + 1, temp.lastIndexOf(']')).split(",");
-//        List<Object> unwindList = (List<Object>) params[paramI];
-//        for (String slice : slices) {
-//            String[] fromToS = (slice + ' ').split(":");
-//            if (fromToS.length == 1) {
-//                subList.add(unwindList.get(Integer.parseInt(fromToS[0].trim())));
-//            } else {
-//                int from = Integer.parseInt(fromToS[0].trim());
-//                int to;
-//                String toS = fromToS[1].trim();
-//                if (toS.isEmpty()) to = unwindList.size();
-//                else {
-//                    to = Integer.parseInt(toS);
-//                    if (to < 0) {
-//                        to = unwindList.size() + to;
-//                    }
-//                }
-//                for (int j = from; j < to; j++) {
-//                    subList.add(unwindList.get(j));
-//                }
-//            }
-//        }
-//        return subList;
-//    }
 
     private static Object fillStringValue(String str, Map<String, Object> context) {
         Placeholder placeholder = new Placeholder(str);
-        if (placeholder.raw) return placeholder.rawStr;
-        if (placeholder.conditionValid(context)) return placeholder.value(context);
-        return null;
+        return fillStringValue(placeholder, context);
     }
 
-    private static void keyFilter(List<String> unwindKeys, Set<String> mapKeys, String exp) {
-        if (exp.startsWith("-:")) {
-            // 按正则排除
-            String excludeKeys = exp.substring(2);
-            unwindKeys.addAll(mapKeys.stream().filter(k -> !excludeKeys.equals(k) && !k.matches(excludeKeys)).collect(Collectors.toList()));
-            unwindKeys.removeIf(k -> excludeKeys.equals(k) || excludeKeys.matches(exp));
+    private static Object fillStringValue(Placeholder placeholder, Map<String, Object> context) {
+        if (placeholder.raw) return placeholder.rawStr;
+        ConditionValueRes evalRes = placeholder.eval(context);
+        if (!evalRes.condition) return ignoreObject;
+        if (evalRes.value == null) return null;
+
+        if (placeholder.foreach) {
+            List<Object> list = placeholder.unwind ?  new UnwindArrayList() : new ArrayList<>();
+            if (evalRes.value instanceof Map) {
+                ((Map<String, Object>) evalRes.value).forEach((key, value) -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put(placeholder.foreachIndexOrKeyName, key);
+                    item.put(placeholder.foreachValueName, value);
+                    list.add(item);
+                });
+            }
+            else if (evalRes.value instanceof Iterable) {
+                int index = 0;
+                for (Object obj : (Iterable<Object>) evalRes.value) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put(placeholder.foreachIndexOrKeyName, index);
+                    item.put(placeholder.foreachValueName, obj);
+                    list.add(item);
+                    index++;
+                }
+            }
+            return list.isEmpty() ? ignoreObject : list;
         }
-        else unwindKeys.addAll(mapKeys.stream().filter(k -> exp.equals(k) || k.matches(exp)).collect(Collectors.toList()));
+        else if (placeholder.unwind && evalRes.value instanceof List) {
+            UnwindArrayList unwindArrayList = new UnwindArrayList();
+            unwindArrayList.addAll((List) evalRes.value);
+            return unwindArrayList;
+        }
+        return evalRes.value;
     }
 
     private static class UnwindArrayList extends ArrayList<Object> {
-
+        private static final long serialVersionUID = -3946129382500020520L;
     }
+
+    private static class IgnoreObject {}
 
     private static class Placeholder {
 
-        public boolean raw;
+        boolean raw;
 
-        public String rawStr;
+        String rawStr;
 
-        public boolean unwind;
+        boolean unwind;
 
-        public String condition;
+        String conditionExp;
 
-        public String key;
+        boolean foreach;
 
-        public boolean foreach;
+        String foreachIndexOrKeyName;
 
-        public String foreachIndexOrKeyName;
+        String foreachValueName;
 
-        public String foreachValueName;
+        String valueExp;
 
-        public String paramIndexOrName;
+        private static final Pattern conditionForeachValueP = Pattern.compile("^(if *\\((.+)\\) *)? *foreach *\\((.+),(.+)\\) *of +(.*)?$");
 
-        public String jsonPath;
-
-        private static final Pattern conditionKeyP = Pattern.compile("^(.+) *\\? * '(.*)'$");
-
-        private static final Pattern conditionParamPathP = Pattern.compile("^((.+) *\\? *)?( *foreach +\\((.+), (.+)*\\) +of +)?\\$(.+?)(\\$.*)?$");
+        private static final Pattern conditionValueP = Pattern.compile("^(if *\\((.+)\\) *)?(.*)?$");
 
         private Placeholder(String placeholder) {
             if ((placeholder.startsWith("{{") && placeholder.endsWith("}}"))
@@ -302,31 +279,24 @@ public class JsonTemplate {
                 raw = false;
                 unwind = placeholder.charAt(0) == '[';
 
-                boolean match = false;
                 String content = placeholder.substring(2, placeholder.length() - 2).trim();
-                if (content.endsWith("?")) {
-                    match = true;
-                    condition = content.substring(0, content.length() - 1);
-                }
+                Matcher conditionForeachValueM;
+                if (content.contains("foreach") && (conditionForeachValueM = conditionForeachValueP.matcher(content)).find()) {
+                    conditionExp = conditionForeachValueM.group(2);
 
-                if (!match) {
-                    Matcher conditionKeyM = conditionKeyP.matcher(content);
-                    if (conditionKeyM.find()) {
-                        match = true;
-                        condition = conditionKeyM.group(1);
-                        key = conditionKeyM.group(2);
-                    }
-                }
+                    foreach = true;
+                    foreachIndexOrKeyName = conditionForeachValueM.group(3);
+                    if (foreachIndexOrKeyName != null) foreachIndexOrKeyName = foreachIndexOrKeyName.trim();
+                    foreachValueName = conditionForeachValueM.group(4);
+                    if (foreachValueName != null) foreachValueName = foreachValueName.trim();
 
-                if (!match) {
-                    Matcher conditionParamPathM = conditionParamPathP.matcher(content);
-                    if (conditionParamPathM.find()) {
-                        condition = conditionParamPathM.group(2);
-                        foreach = conditionParamPathM.group(3) != null;
-                        foreachIndexOrKeyName = conditionParamPathM.group(4);
-                        foreachValueName = conditionParamPathM.group(5);
-                        paramIndexOrName = conditionParamPathM.group(6);
-                        jsonPath = conditionParamPathM.group(7);
+                    valueExp = conditionForeachValueM.group(5);
+                }
+                else {
+                    Matcher conditionValueM = conditionValueP.matcher(content);
+                    if (conditionValueM.find()) {
+                        conditionExp = conditionValueM.group(2);
+                        valueExp = conditionValueM.group(3);
                     }
                 }
             }
@@ -341,58 +311,54 @@ public class JsonTemplate {
             }
         }
 
-        private boolean conditionValid(Map<String, Object> context) {
-            if (condition == null) return true;
-            try {
-                Object res = jsEngine.eval(condition, new SimpleBindings(context));
-                if (res == null || Boolean.FALSE.equals(res)) return false;
-                if (res instanceof Number) {
-                    double d = ((Number) res).doubleValue();
-                    return d != 0 && !Double.isNaN(d);
+        private ConditionValueRes eval(Map<String, Object> context) {
+            if (conditionExp != null || valueExp != null) {
+                try {
+                    String evalStr = "var res = {};\n" +
+                            "res.condition = " + (conditionExp == null ? "true" : conditionExp) + " ? true : false;\n" +
+                            "if (res.condition) res.value = " + (valueExp == null || valueExp.trim().isEmpty() ? "null" : valueExp) + ";\n" +
+                            "res;";
+                    SimpleBindings bindings = new SimpleBindings();
+                    bindings.putAll(context);
+                    Map<String, Object> res = (Map<String, Object>) jsEngine.eval(evalStr, bindings);
+                    return new ConditionValueRes(res);
+                } catch (ScriptException e) {
+                    e.printStackTrace();
                 }
-                return !(res instanceof String) || !((String) res).isEmpty();
             }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            return false;
-        }
-
-        private Object value(Map<String, Object> context) {
-            if (paramIndexOrName == null) return null;
-            else if (jsonPath == null) return context.get("$" + paramIndexOrName);
-            else return JsonPath.parse(context.get("$" + paramIndexOrName)).read(jsonPath, Object.class);
+            return new ConditionValueRes(false, null);
         }
 
     }
 
-    public static void main(String[] args) throws ScriptException {
-//        Map<String, Object> $0 = new HashMap<>();
-//        $0.put("aaa", "aaa");
-//        $0.put("bbb", "bbb");
-//        $0.put("ccc", "ccc");
-//
-//        Map<String, Object> map = new HashMap<>();
-//        map.put("a", "aaa");
-//        map.put("b", "bbb");
-//        map.put("c", "ccc");
-//        List<Object> $1 = Arrays.asList(map, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-//        Object obj = parseResourceTemplate("jsonTemplate/0.json", $0, $1);
-//        System.out.println(gsonPretty.toJson(obj));
+    private static class ConditionValueRes {
+        boolean condition;
+        Object value;
 
-        Map<String, Object> res = (Map<String, Object>) jsEngine.eval("" +
-                "var res = {};\n" +
-                "res.condition = true;\n" +
-                "if (res.condition) res.value = 123;\n" +
-                "res;");
-        System.out.println(res.get("condition"));
-        System.out.println(res.get("value"));
+        ConditionValueRes(boolean condition, Object value) {
+            this.condition = condition;
+            this.value = value;
+        }
+
+        ConditionValueRes(Map<String, Object> map) {
+            condition = Boolean.TRUE.equals(map.get("condition"));
+            value = map.get("value");
+        }
+    }
+
+    public static void main(String[] args) {
+        Map<String, Object> $0 = new HashMap<>();
+        $0.put("aaa", "aaa");
+        $0.put("bbb", "bbb");
+        $0.put("ccc", "ccc");
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("a", "aaa");
+        map.put("b", "bbb");
+        map.put("c", "ccc");
+        List<Object> $1 = Arrays.asList(map, 1, 2, "3");
+        Object obj = parseResourceTemplate("jsonTemplate/0.json", $0, $1);
+        System.out.println(gsonPretty.toJson(obj));
     }
 
 }
-/*
-var res = {};
-res.condition = true;
-if (res.condition) res.value = 123;
-res;
- */
