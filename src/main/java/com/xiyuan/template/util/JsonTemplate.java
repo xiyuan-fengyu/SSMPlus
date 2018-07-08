@@ -96,7 +96,8 @@ public class JsonTemplate {
                     if (placeholder.foreach) {
                         Object foreachRes = fillForeach(placeholder, evalRes, value, context);
                         if (foreachRes instanceof List) {
-                            if (map.size() == 1 && foreachRes instanceof UnwindArrayList) return foreachRes;
+                            if (map.size() == 1) return foreachRes;
+
                             for (Object obj : (List) foreachRes) {
                                 if (obj instanceof Map) {
                                     fillerObj.putAll((Map<String, ?>) obj);
@@ -133,6 +134,7 @@ public class JsonTemplate {
                         }
                     }
                 }
+                else if (map.size() == 1) return ignoreObject;
             }
         }
         return fillerObj.isEmpty() ? ignoreObject : fillerObj;
@@ -195,7 +197,9 @@ public class JsonTemplate {
                 Object filled = filler(o, context);
                 if (filled != ignoreObject) {
                     if (filled instanceof UnwindArrayList) {
-                        fillerList.addAll((UnwindArrayList) filled);
+                        ((UnwindArrayList) filled).forEach(item -> {
+                            if (item != ignoreObject) fillerList.add(item);
+                        });
                     }
                     else fillerList.add(filled);
                 }

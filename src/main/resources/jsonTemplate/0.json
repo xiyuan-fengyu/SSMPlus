@@ -36,6 +36,11 @@
         "{{'unwind_' + $index}}": "{{$value}}"
       },
       "secondKey": "ok"
+    },
+    {
+      "[[foreach (index, value0) of $1]]": {
+        "{{if (typeof $value0 == 'object') foreach (key, value1) of $value0}}": ["{{$key}}", "{{$value1}}"]
+      }
     }
   ]
 }
