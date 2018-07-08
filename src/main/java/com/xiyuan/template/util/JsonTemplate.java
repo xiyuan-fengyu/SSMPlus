@@ -96,8 +96,6 @@ public class JsonTemplate {
                     if (placeholder.foreach) {
                         Object foreachRes = fillForeach(placeholder, evalRes, value, context);
                         if (foreachRes instanceof List) {
-                            if (map.size() == 1) return foreachRes;
-
                             for (Object obj : (List) foreachRes) {
                                 if (obj instanceof Map) {
                                     fillerObj.putAll((Map<String, ?>) obj);
@@ -157,7 +155,7 @@ public class JsonTemplate {
                 subContext.put("$" + placeholder.foreachIndexOrKeyName, key);
                 subContext.put("$" + placeholder.foreachValueName, value);
                 Object subValue = filler(valueTemplate, subContext);
-                if (subValue != null) res.add(subValue);
+                if (subValue != null && subValue != ignoreObject) tryUnwind(subValue, res);
             });
         }
         else if (evalValue.value instanceof Iterable) {
@@ -167,7 +165,7 @@ public class JsonTemplate {
                 subContext.put("$" + placeholder.foreachIndexOrKeyName, index);
                 subContext.put("$" + placeholder.foreachValueName, item);
                 Object subValue = filler(valueTemplate, subContext);
-                if (subValue != null) res.add(subValue);
+                if (subValue != null && subValue != ignoreObject) tryUnwind(subValue, res);
                 index++;
             }
         }
@@ -179,33 +177,43 @@ public class JsonTemplate {
         if (list.isEmpty()) return list;
 
         List<Object> fillerList = new ArrayList();
-        for (Object o : list) {
+        for (int i = 0, size = list.size(); i < size; i++) {
+            Object o = list.get(i);
             if (o instanceof String) {
                 Placeholder placeholder = new Placeholder((String) o);
                 if (placeholder.raw) fillerList.add(placeholder.rawStr);
                 else {
-                    Object fillRes = fillStringValue(placeholder, context);
-                    if (fillRes != ignoreObject) {
-                        if (fillRes instanceof UnwindArrayList) {
-                            fillerList.addAll(((UnwindArrayList) fillRes));
+                    if (placeholder.foreach && size == 2 && i == 0) {
+                        ConditionValueRes evalRes = placeholder.eval(context);
+                        if (evalRes.condition) {
+                            return fillForeach(placeholder, evalRes, list.get(1), context);
                         }
-                        else fillerList.add(fillRes);
+                        else return ignoreObject;
+                    }
+                    else {
+                        Object fillRes = fillStringValue(placeholder, context);
+                        if (fillRes != ignoreObject) {
+                            if (fillRes instanceof UnwindArrayList) {
+                                fillerList.addAll(((UnwindArrayList) fillRes));
+                            }
+                            else fillerList.add(fillRes);
+                        }
                     }
                 }
             }
             else {
                 Object filled = filler(o, context);
-                if (filled != ignoreObject) {
-                    if (filled instanceof UnwindArrayList) {
-                        ((UnwindArrayList) filled).forEach(item -> {
-                            if (item != ignoreObject) fillerList.add(item);
-                        });
-                    }
-                    else fillerList.add(filled);
-                }
+                tryUnwind(filled, fillerList);
             }
         }
         return fillerList.isEmpty() ? ignoreObject : fillerList;
+    }
+
+    private static void tryUnwind(Object source, List<Object> dist) {
+        if (source != ignoreObject) {
+            if (source instanceof UnwindArrayList) dist.addAll(((UnwindArrayList) source));
+            else dist.add(source);
+        }
     }
 
     private static Object fillStringValue(String str, Map<String, Object> context) {
@@ -217,29 +225,8 @@ public class JsonTemplate {
         if (placeholder.raw) return placeholder.rawStr;
         ConditionValueRes evalRes = placeholder.eval(context);
         if (!evalRes.condition) return ignoreObject;
-        if (evalRes.value == null) return null;
-
         if (placeholder.foreach) {
-            List<Object> list = placeholder.unwind ?  new UnwindArrayList() : new ArrayList<>();
-            if (evalRes.value instanceof Map) {
-                ((Map<String, Object>) evalRes.value).forEach((key, value) -> {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put(placeholder.foreachIndexOrKeyName, key);
-                    item.put(placeholder.foreachValueName, value);
-                    list.add(item);
-                });
-            }
-            else if (evalRes.value instanceof Iterable) {
-                int index = 0;
-                for (Object obj : (Iterable<Object>) evalRes.value) {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put(placeholder.foreachIndexOrKeyName, index);
-                    item.put(placeholder.foreachValueName, obj);
-                    list.add(item);
-                    index++;
-                }
-            }
-            return list.isEmpty() ? ignoreObject : list;
+            return ignoreObject;
         }
         else if (placeholder.unwind && evalRes.value instanceof List) {
             UnwindArrayList unwindArrayList = new UnwindArrayList();
