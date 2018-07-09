@@ -46,9 +46,18 @@ public class Util {
 
     private static final JsonParser jsonParser = new JsonParser();
 
-    public static final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
+    public static final Gson gson = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .serializeNulls()
+            .disableHtmlEscaping()
+            .create();
 
-    public static final Gson gsonFormat = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").setPrettyPrinting().create();
+    public static final Gson gsonPretty = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .serializeNulls()
+            .disableHtmlEscaping()
+            .setPrettyPrinting()
+            .create();
 
     public static JsonElement toJsonElement(String json) {
         return jsonParser.parse(json);

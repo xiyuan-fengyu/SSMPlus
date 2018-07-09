@@ -37,6 +37,6 @@ public class Log implements Serializable {
 
     @Override
     public String toString() {
-        return Util.gsonFormat.toJson(this);
+        return Util.gsonPretty.toJson(this);
     }
 }

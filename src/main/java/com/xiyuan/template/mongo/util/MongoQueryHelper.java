@@ -120,7 +120,7 @@ public class MongoQueryHelper {
             Map<String, Object> con5 = con("userRole", "$gte", "1", "$lte", "4");
             Map<String, Object> con6 = and(con4, con5);
             Map<String, Object> con7 = not(con6);
-//            System.out.println(Util.gsonFormat.toJson(con7));
+//            System.out.println(Util.gsonPretty.toJson(con7));
         }
 
         {
@@ -136,7 +136,7 @@ public class MongoQueryHelper {
                 con("userBirthday", "$gte", $date(157737600000L), "$lte", $date(473356800000L)),
                 con("userPosition", "$regex", "高级.*经理")
             );
-            System.out.println(Util.gsonFormat.toJson(con));
+            System.out.println(Util.gsonPretty.toJson(con));
         }
     }
 

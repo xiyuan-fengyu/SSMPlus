@@ -19,9 +19,18 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unchecked")
 public class JsonTemplate {
 
-    public static final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").serializeNulls().create();
+    public static final Gson gson = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .serializeNulls()
+            .disableHtmlEscaping()
+            .create();
 
-    public static final Gson gsonPretty = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").serializeNulls().setPrettyPrinting().create();
+    public static final Gson gsonPretty = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .serializeNulls()
+            .disableHtmlEscaping()
+            .setPrettyPrinting()
+            .create();
 
     private static final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName("js");
 
