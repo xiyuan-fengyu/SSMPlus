@@ -192,15 +192,16 @@ public class JsonTemplate {
                 Placeholder placeholder = new Placeholder((String) o);
                 if (placeholder.raw) fillerList.add(placeholder.rawStr);
                 else {
-                    if (placeholder.foreach && size == 2 && i == 0) {
-                        ConditionValueRes evalRes = placeholder.eval(context);
+                    ConditionValueRes evalRes = placeholder.eval(context);
+                    if (size == 2 && i == 0 &&  (placeholder.foreach || placeholder.valueExp == null)) {
                         if (evalRes.condition) {
-                            return fillForeach(placeholder, evalRes, list.get(1), context);
+                            if (placeholder.foreach) return fillForeach(placeholder, evalRes, list.get(1), context);
+                            return filler(list.get(1), context);
                         }
-                        else return ignoreObject;
+                        return ignoreObject;
                     }
                     else {
-                        Object fillRes = fillStringValue(placeholder, context);
+                        Object fillRes = fillStringValue(placeholder, context, evalRes);
                         if (fillRes != ignoreObject) {
                             if (fillRes instanceof UnwindArrayList) {
                                 fillerList.addAll(((UnwindArrayList) fillRes));
@@ -227,12 +228,15 @@ public class JsonTemplate {
 
     private static Object fillStringValue(String str, Map<String, Object> context) {
         Placeholder placeholder = new Placeholder(str);
-        return fillStringValue(placeholder, context);
+        return fillStringValue(placeholder, context, null);
     }
 
-    private static Object fillStringValue(Placeholder placeholder, Map<String, Object> context) {
+
+
+    private static Object fillStringValue(Placeholder placeholder, Map<String, Object> context, ConditionValueRes evalRes) {
         if (placeholder.raw) return placeholder.rawStr;
-        ConditionValueRes evalRes = placeholder.eval(context);
+
+        if (evalRes == null) evalRes = placeholder.eval(context);
         if (!evalRes.condition) return ignoreObject;
         if (placeholder.foreach) {
             return ignoreObject;
@@ -269,9 +273,9 @@ public class JsonTemplate {
 
         String valueExp;
 
-        private static final Pattern conditionForeachValueP = Pattern.compile("^(if *\\((.+)\\) *)? *foreach *\\((.+),(.+)\\) *of +(.*)?$");
+        private static final Pattern conditionForeachValueP = Pattern.compile("^(if *\\((.+)\\) *)? *foreach *\\((.+),(.+)\\) *of +(.+)?$");
 
-        private static final Pattern conditionValueP = Pattern.compile("^(if *\\((.+)\\) *)?(.*)?$");
+        private static final Pattern conditionValueP = Pattern.compile("^(if *\\((.+)\\) *)?(.+)?$");
 
         private Placeholder(String placeholder) {
             if ((placeholder.startsWith("{{") && placeholder.endsWith("}}"))
