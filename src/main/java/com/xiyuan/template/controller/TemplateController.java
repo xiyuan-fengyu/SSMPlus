@@ -32,7 +32,9 @@ public class TemplateController {
     }
 
     @RequestMapping(value = "test/jsp")
-    public String testJsp() {
+    public String testJsp(Model model) {
+        model.addAttribute("title", "test");
+        model.addAttribute("msg", "Hello, JSP!");
         return "testJsp";
     }
 
