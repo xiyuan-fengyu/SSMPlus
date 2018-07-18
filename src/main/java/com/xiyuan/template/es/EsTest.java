@@ -22,12 +22,12 @@ public class EsTest {
             userInfos.add(userInfo);
         }
 
-//        Object testBulk = JsonTemplate.parseResourceTemplate("es/test_bulk.json", userInfos);
-//        System.out.println(JsonTemplate.gsonPretty.toJson(testBulk));
+        Object testBulk = JsonTemplate.parseResourceTemplate("es/test_bulk.json", userInfos);
+        System.out.println(JsonTemplate.gsonPretty.toJson(testBulk));
 
-        ElasticSearch es = new ElasticSearch("http://192.168.1.150:9200");
-        List<Map> res = es.evalResource("es/test_bulk.json", userInfos);
-        System.out.println(JsonTemplate.gsonPretty.toJson(res));
+//        ElasticSearch es = new ElasticSearch("http://192.168.1.150:9200");
+//        List<Map> res = es.evalResource("es/test_bulk.json", userInfos);
+//        System.out.println(JsonTemplate.gsonPretty.toJson(res));
     }
 
 }
