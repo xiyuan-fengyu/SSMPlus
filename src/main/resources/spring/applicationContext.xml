@@ -49,6 +49,7 @@
                 <value>classpath:property/database.properties</value>
                 <value>classpath:property/redis.properties</value>
                 <value>classpath:property/mongodb.properties</value>
+                <value>classpath:property/elasticsearch.properties</value>
             </list>
         </property>
     </bean>
@@ -149,5 +150,10 @@
     <mongo:template id="mongoTemplate" db-factory-ref="mongoDbFactory"/>
     <mongo:repositories base-package="com.xiyuan.*"/>
     <!--mongodb 配置 end-->
+
+    <bean id="elasticSearch" class="com.xiyuan.template.es.ElasticSearch">
+        <constructor-arg index="0" value="${elasticsearch.url}"/>
+        <constructor-arg index="1" value="${elasticsearch.charset}"/>
+    </bean>
 
 </beans>

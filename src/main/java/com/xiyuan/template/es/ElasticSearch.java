@@ -25,13 +25,16 @@ public class ElasticSearch {
 
     private String esServer;
 
+    private String charset;
+
     public boolean isRunning() {
         return running;
     }
 
-    public ElasticSearch(String esServer) {
+    public ElasticSearch(String esServer, String charset) {
         if (esServer.endsWith("/")) esServer = esServer.substring(0, esServer.length() - 1);
         this.esServer = esServer;
+        this.charset = charset;
         this.httpclient = HttpClients.createDefault();
     }
 
@@ -95,7 +98,7 @@ public class ElasticSearch {
         httpUriRequest.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
         try {
             if (dataStrBuilder != null && httpUriRequest instanceof HttpEntityEnclosingRequestBase) {
-                ((HttpEntityEnclosingRequestBase) httpUriRequest).setEntity(new StringEntity(dataStrBuilder.toString()));
+                ((HttpEntityEnclosingRequestBase) httpUriRequest).setEntity(new StringEntity(dataStrBuilder.toString(), this.charset));
             }
 
             CloseableHttpResponse res = httpclient.execute(httpUriRequest);
