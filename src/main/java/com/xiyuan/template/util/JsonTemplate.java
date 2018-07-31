@@ -64,7 +64,7 @@ public class JsonTemplate {
     }
 
     private static Object filler(Object obj, Object params[]) {
-        if (obj == null || params == null) return null;
+        if (obj == null || params == null) return obj;
 
         Map<String, Object> context = new HashMap<>();
         for (int i = 0; i < params.length; i++) {
