@@ -154,6 +154,7 @@
     <bean id="elasticSearch" class="com.xiyuan.template.es.ElasticSearch">
         <constructor-arg index="0" value="${elasticsearch.url}"/>
         <constructor-arg index="1" value="${elasticsearch.charset}"/>
+        <constructor-arg index="2" value="${elasticsearch.print}"/>
     </bean>
 
 </beans>
