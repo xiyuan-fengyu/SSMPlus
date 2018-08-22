@@ -1,5 +1,8 @@
 package com.xiyuan.template.controller;
 
+import com.baomidou.mybatisplus.plugins.Page;
+import com.xiyuan.template.mybatis.dao.LogDao;
+import com.xiyuan.template.mybatis.entity.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,9 @@ public class TemplateController {
 
     @Autowired
     private Jedis jedis;
+
+    @Autowired
+    private LogDao logDao;
 
     @RequestMapping(value = "test", produces = "text/plain;charset=utf-8")
     @ResponseBody
@@ -36,6 +42,14 @@ public class TemplateController {
         model.addAttribute("title", "test");
         model.addAttribute("msg", "Hello, JSP!");
         return "testJsp";
+    }
+
+    @RequestMapping(value = "test/mybatis/page")
+    @ResponseBody
+    public Object testMybatisPage(int current, int pageSize) {
+        Page<Log> logPage = new Page<>(current, pageSize, "time", false);
+        logPage.setRecords(logDao.selectPage(logPage));
+        return logPage;
     }
 
 }
