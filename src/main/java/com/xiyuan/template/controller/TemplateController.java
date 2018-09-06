@@ -26,9 +26,8 @@ public class TemplateController {
     @RequestMapping(value = "test", produces = "text/plain;charset=utf-8")
     @ResponseBody
     public String test() {
-        logger.info(jedis.hget("tb_log:id:0", "content"));
-        logger.info(jedis.hgetAll("tb_log:id:0").toString());
-        return "测试";
+        logger.info(jedis.hget("tb_log:id:1", "content"));
+        return jedis.hgetAll("tb_log:id:1").toString();
     }
 
     @RequestMapping(value = "test/ftl")

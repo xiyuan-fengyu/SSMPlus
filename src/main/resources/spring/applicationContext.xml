@@ -138,7 +138,7 @@
         <constructor-arg name="database" value="${redis.db.index}" type="int" />
     </bean>
 
-    <bean id="jedis" class="com.xiyuan.template.redis.JedisAutoRelease" p:jedisPool-ref="jedisPool"/>
+    <bean id="jedis" class="com.xiyuan.template.redis.JedisAop" p:jedisPool-ref="jedisPool"/>
     <!--jedis 配置 end-->
 
 
