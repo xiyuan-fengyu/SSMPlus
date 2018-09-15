@@ -1,9 +1,12 @@
 package com.xiyuan.template.redis;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -17,11 +20,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Created by xiyuan_fengyu on 2017/12/1 14:35.
  */
-public class JedisAutoRelease implements FactoryBean<Jedis>, MethodInterceptor {
+public class JedisAop implements FactoryBean<Jedis>, MethodInterceptor, ApplicationContextAware {
 
     private static final long releaseDelay = 3000;
 
     private JedisPool jedisPool;
+
+    private ApplicationContext applicationContext;
+
+    private AfterJedisCallHandler afterJedisCallHandler;
 
     private AtomicBoolean running = new AtomicBoolean(true);
 
@@ -34,7 +41,12 @@ public class JedisAutoRelease implements FactoryBean<Jedis>, MethodInterceptor {
     }
 
     @Override
-    public Jedis getObject() {
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public Jedis getObject() throws Exception {
         Thread thread = new Thread(() -> {
             while (running.get()) {
                 try {
@@ -55,6 +67,8 @@ public class JedisAutoRelease implements FactoryBean<Jedis>, MethodInterceptor {
         });
         thread.setDaemon(true);
         thread.start();
+
+        this.afterJedisCallHandler = new AfterJedisCallHandler(applicationContext);
 
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(Jedis.class);
@@ -85,6 +99,10 @@ public class JedisAutoRelease implements FactoryBean<Jedis>, MethodInterceptor {
         Object result;
         try {
             result = method.invoke(jedisWrapper.jedis, objects);
+            Object tempResult = afterJedisCallHandler.dispatch(jedisWrapper.jedis, method, objects, result);
+            if (tempResult != null) {
+                result = tempResult;
+            }
         }
         finally {
             delayRelease(jedisWrapper);

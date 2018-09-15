@@ -1,0 +1,15 @@
+{
+  "POST": "/user/info/_bulk",
+  "data": [
+    "{{foreach (index, userInfo) of $0}}",
+    {
+      "index": {
+        "_id": "{{$userInfo.id}}"
+      }
+    },
+    {
+      "name": "{{$userInfo.name}}",
+      "age": "{{$userInfo.age}}"
+    }
+  ]
+}

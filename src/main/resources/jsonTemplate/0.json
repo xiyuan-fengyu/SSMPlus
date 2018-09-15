@@ -20,7 +20,7 @@
     "{{$1}}",
     "[[$1]]",
     {
-      "[[foreach (index, value) of $1]]": {
+      "{{foreach (index, value) of $1}}": {
         "{{'unwind_' + $index}}": "{{$value}}"
       }
     },
@@ -37,7 +37,7 @@
       }
     ],
     {
-      "[[foreach (index, value) of $1]]": {
+      "{{foreach (index, value) of $1}}": {
         "{{'unwind_' + $index}}": "{{$value}}"
       },
       "someKey": "ok"
@@ -69,6 +69,10 @@
         "{{if (typeof $value0 == 'object') foreach (key, value1) of $value0}}",
         "{{$key + '=' + $value1}}"
       ]
+    ],
+    [
+      "{{if ($0.aaa)}}",
+      "{{'$0.aaa=' + $0.aaa}}"
     ]
   ]
 }

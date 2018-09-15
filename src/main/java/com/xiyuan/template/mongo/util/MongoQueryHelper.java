@@ -1,6 +1,7 @@
 package com.xiyuan.template.mongo.util;
 
 import com.xiyuan.template.util.Util;
+import org.bson.Document;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -104,11 +105,32 @@ public class MongoQueryHelper {
                     notCon.put(keyOrOperator, not((Map<String, Object>) subCons));
                 }
                 else {
-                    notCon.put("$not", subCons);
+                    Map<String, Object> ne = new HashMap<>();
+                    ne.put("$ne", subCons);
+                    notCon.put(keyOrOperator, ne);
                 }
             }
             return notCon;
         }
+    }
+
+    public static Document keyValuesToDoc(Object ...params) {
+        if (params == null || params.length == 0) return new Document();
+        Document doc = new Document();
+        for (int i = 0, len = params.length / 2; i < len; i++) {
+            doc.put(params[i * 2].toString(), params[i * 2 + 1]);
+        }
+        return doc;
+    }
+
+    public static Document fields(String ...params) {
+        if (params == null || params.length == 0) return new Document();
+        Object[] fields = new Object[params.length * 2];
+        for (int i = 0; i < params.length; i++) {
+            fields[i * 2] = params[i];
+            fields[i * 2 + 1] = 1;
+        }
+        return keyValuesToDoc(fields);
     }
 
     public static void main(String[] args) {
@@ -120,7 +142,7 @@ public class MongoQueryHelper {
             Map<String, Object> con5 = con("userRole", "$gte", "1", "$lte", "4");
             Map<String, Object> con6 = and(con4, con5);
             Map<String, Object> con7 = not(con6);
-//            System.out.println(Util.gsonFormat.toJson(con7));
+//            System.out.println(Util.gsonPretty.toJson(con7));
         }
 
         {
@@ -136,7 +158,7 @@ public class MongoQueryHelper {
                 con("userBirthday", "$gte", $date(157737600000L), "$lte", $date(473356800000L)),
                 con("userPosition", "$regex", "高级.*经理")
             );
-            System.out.println(Util.gsonFormat.toJson(con));
+            System.out.println(Util.gsonPretty.toJson(con));
         }
     }
 

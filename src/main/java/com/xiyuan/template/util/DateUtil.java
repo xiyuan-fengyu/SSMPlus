@@ -21,10 +21,13 @@ public class DateUtil {
     public static final String fDayNoDivider = "yyyyMMdd";
 
     private static SimpleDateFormat getFormat(String formatStr) {
-        SimpleDateFormat format = formats.get(formatStr);
-        if (format == null) {
-            format = new SimpleDateFormat(formatStr);
-            formats.put(formatStr, format);
+        SimpleDateFormat format;
+        synchronized (formats) {
+            format = formats.get(formatStr);
+            if (format == null) {
+                format = new SimpleDateFormat(formatStr);
+                formats.put(formatStr, format);
+            }
         }
         return format;
     }
@@ -34,7 +37,10 @@ public class DateUtil {
     }
 
     public static String format(Date date, String format) {
-        return getFormat(format).format(date);
+        SimpleDateFormat sdf = getFormat(format);
+        synchronized (sdf) {
+            return sdf.format(date);
+        }
     }
 
     public static Date parse(String str) {
@@ -43,7 +49,10 @@ public class DateUtil {
 
     public static Date parse(String str, String format) {
         try {
-            return getFormat(format).parse(str);
+            SimpleDateFormat sdf = getFormat(format);
+            synchronized (sdf) {
+                return sdf.parse(str);
+            }
         } catch (ParseException e) {
             return new Date();
         }

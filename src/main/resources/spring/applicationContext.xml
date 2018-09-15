@@ -49,6 +49,7 @@
                 <value>classpath:property/database.properties</value>
                 <value>classpath:property/redis.properties</value>
                 <value>classpath:property/mongodb.properties</value>
+                <value>classpath:property/elasticsearch.properties</value>
             </list>
         </property>
     </bean>
@@ -89,9 +90,16 @@
         <property name="mapperLocations">
             <array>
                 <!--通过 com.xiyuan.template.mybatis.MpGenerator 生成对应的entity，mapper，dao，xml后，解开下面两个注释-->
-                <!--<value>classpath:mapper/xml/*.xml</value>-->
-                <!--<value>classpath:mapper/*.xml</value>-->
+                <value>classpath:mapper/xml/*.xml</value>
+                <value>classpath:mapper/*.xml</value>
             </array>
+        </property>
+        <!--http://baomidou.oschina.io/mybatis-plus-doc/#/page-plugin-->
+        <!--https://blog.csdn.net/mxj588love/article/details/53490118-->
+        <property name="plugins">
+            <list>
+                <bean class="com.baomidou.mybatisplus.plugins.PaginationInterceptor"/>
+            </list>
         </property>
     </bean>
 
@@ -130,7 +138,7 @@
         <constructor-arg name="database" value="${redis.db.index}" type="int" />
     </bean>
 
-    <bean id="jedis" class="com.xiyuan.template.redis.JedisAutoRelease" p:jedisPool-ref="jedisPool"/>
+    <bean id="jedis" class="com.xiyuan.template.redis.JedisAop" p:jedisPool-ref="jedisPool"/>
     <!--jedis 配置 end-->
 
 
@@ -149,5 +157,11 @@
     <mongo:template id="mongoTemplate" db-factory-ref="mongoDbFactory"/>
     <mongo:repositories base-package="com.xiyuan.*"/>
     <!--mongodb 配置 end-->
+
+    <bean id="elasticSearch" class="com.xiyuan.template.es.ElasticSearch">
+        <constructor-arg index="0" value="${elasticsearch.url}"/>
+        <constructor-arg index="1" value="${elasticsearch.charset}"/>
+        <constructor-arg index="2" value="${elasticsearch.print}"/>
+    </bean>
 
 </beans>

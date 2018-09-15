@@ -19,9 +19,18 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unchecked")
 public class JsonTemplate {
 
-    public static final Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").serializeNulls().create();
+    public static final Gson gson = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .serializeNulls()
+            .disableHtmlEscaping()
+            .create();
 
-    public static final Gson gsonPretty = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").serializeNulls().setPrettyPrinting().create();
+    public static final Gson gsonPretty = new GsonBuilder()
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .serializeNulls()
+            .disableHtmlEscaping()
+            .setPrettyPrinting()
+            .create();
 
     private static final ScriptEngine jsEngine = new ScriptEngineManager().getEngineByName("js");
 
@@ -55,7 +64,7 @@ public class JsonTemplate {
     }
 
     private static Object filler(Object obj, Object params[]) {
-        if (obj == null || params == null) return null;
+        if (obj == null || params == null) return obj;
 
         Map<String, Object> context = new HashMap<>();
         for (int i = 0; i < params.length; i++) {
@@ -154,8 +163,7 @@ public class JsonTemplate {
                 Map<String, Object> subContext = new HashMap<>(context);
                 subContext.put("$" + placeholder.foreachIndexOrKeyName, key);
                 subContext.put("$" + placeholder.foreachValueName, value);
-                Object subValue = filler(valueTemplate, subContext);
-                if (subValue != null && subValue != ignoreObject) tryUnwind(subValue, res);
+                fillTemplate(valueTemplate, subContext, res);
             });
         }
         else if (evalValue.value instanceof Iterable) {
@@ -164,13 +172,25 @@ public class JsonTemplate {
                 Map<String, Object> subContext = new HashMap<>(context);
                 subContext.put("$" + placeholder.foreachIndexOrKeyName, index);
                 subContext.put("$" + placeholder.foreachValueName, item);
-                Object subValue = filler(valueTemplate, subContext);
-                if (subValue != null && subValue != ignoreObject) tryUnwind(subValue, res);
+                fillTemplate(valueTemplate, subContext, res);
                 index++;
             }
         }
         else return ignoreObject;
         return res;
+    }
+
+    private static void fillTemplate(Object valueTemplate, Map<String, Object> context, List<Object> res) {
+        if (valueTemplate instanceof UnwindArrayList) {
+            ((UnwindArrayList) valueTemplate).forEach(valueTemplateItem -> {
+                Object subValue = filler(valueTemplateItem, context);
+                if (subValue != ignoreObject) tryUnwind(subValue, res);
+            });
+        }
+        else {
+            Object subValue = filler(valueTemplate, context);
+            if (subValue != ignoreObject) tryUnwind(subValue, res);
+        }
     }
 
     private static Object fillListValue(List<Object> list, Map<String, Object> context) {
@@ -183,15 +203,40 @@ public class JsonTemplate {
                 Placeholder placeholder = new Placeholder((String) o);
                 if (placeholder.raw) fillerList.add(placeholder.rawStr);
                 else {
-                    if (placeholder.foreach && size == 2 && i == 0) {
-                        ConditionValueRes evalRes = placeholder.eval(context);
+                    ConditionValueRes evalRes = placeholder.eval(context);
+                    if (i == 0 && size >= 2 && (placeholder.foreach || (placeholder.conditionExp != null && placeholder.valueExp == null))) {
                         if (evalRes.condition) {
-                            return fillForeach(placeholder, evalRes, list.get(1), context);
+                            if (size == 2) {
+                                if (placeholder.foreach) return fillForeach(placeholder, evalRes, list.get(1), context);
+                                return filler(list.get(1), context);
+                            }
+                            else {
+                                List<Object> subRes = placeholder.unwind ? new UnwindArrayList() : new ArrayList<>();
+                                if (placeholder.foreach) {
+                                    List<Object> unwindTemplates = new UnwindArrayList();
+                                    for (int j = 1; j < size; j++) {
+                                        unwindTemplates.add(list.get(j));
+                                    }
+                                    Object filler = fillForeach(placeholder, evalRes, unwindTemplates, context);
+                                    if (filler != ignoreObject) {
+                                        subRes.addAll((List) filler);
+                                    }
+                                }
+                                else {
+                                    for (int j = 1; j < size; j++) {
+                                        Object filler = filler(list.get(j), context);
+                                        if (filler != ignoreObject) {
+                                            subRes.add(filler);
+                                        }
+                                    }
+                                }
+                                return subRes;
+                            }
                         }
-                        else return ignoreObject;
+                        return ignoreObject;
                     }
                     else {
-                        Object fillRes = fillStringValue(placeholder, context);
+                        Object fillRes = fillStringValue(placeholder, context, evalRes);
                         if (fillRes != ignoreObject) {
                             if (fillRes instanceof UnwindArrayList) {
                                 fillerList.addAll(((UnwindArrayList) fillRes));
@@ -218,12 +263,15 @@ public class JsonTemplate {
 
     private static Object fillStringValue(String str, Map<String, Object> context) {
         Placeholder placeholder = new Placeholder(str);
-        return fillStringValue(placeholder, context);
+        return fillStringValue(placeholder, context, null);
     }
 
-    private static Object fillStringValue(Placeholder placeholder, Map<String, Object> context) {
+
+
+    private static Object fillStringValue(Placeholder placeholder, Map<String, Object> context, ConditionValueRes evalRes) {
         if (placeholder.raw) return placeholder.rawStr;
-        ConditionValueRes evalRes = placeholder.eval(context);
+
+        if (evalRes == null) evalRes = placeholder.eval(context);
         if (!evalRes.condition) return ignoreObject;
         if (placeholder.foreach) {
             return ignoreObject;
@@ -260,9 +308,9 @@ public class JsonTemplate {
 
         String valueExp;
 
-        private static final Pattern conditionForeachValueP = Pattern.compile("^(if *\\((.+)\\) *)? *foreach *\\((.+),(.+)\\) *of +(.*)?$");
+        private static final Pattern conditionForeachValueP = Pattern.compile("^(if *\\((.+)\\) *)? *foreach *\\((.+),(.+)\\) *of +(.+)?$");
 
-        private static final Pattern conditionValueP = Pattern.compile("^(if *\\((.+)\\) *)?(.*)?$");
+        private static final Pattern conditionValueP = Pattern.compile("^(if *\\((.+)\\) *)?(.+)?$");
 
         private Placeholder(String placeholder) {
             if ((placeholder.startsWith("{{") && placeholder.endsWith("}}"))
