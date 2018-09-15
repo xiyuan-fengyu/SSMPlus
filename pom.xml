@@ -96,6 +96,20 @@
         </dependency>
         <!-- springframework end -->
 
+        <!--test start-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.3.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!--test end-->
 
         <dependency>
             <groupId>javax.servlet</groupId>
