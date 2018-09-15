@@ -35,12 +35,8 @@
     <!--开启定时任务-->
     <task:annotation-driven />
 
-    <mvc:annotation-driven />
-    <mvc:default-servlet-handler />
-
     <!-- 打开aop注解 -->
     <aop:aspectj-autoproxy proxy-target-class="true" />
-
 
     <!-- 加载配置 -->
     <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">

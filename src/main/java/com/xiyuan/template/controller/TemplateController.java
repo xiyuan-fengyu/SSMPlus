@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import redis.clients.jedis.Jedis;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 public class TemplateController {
 
@@ -25,9 +28,11 @@ public class TemplateController {
 
     @RequestMapping(value = "test", produces = "text/plain;charset=utf-8")
     @ResponseBody
-    public String test() {
-        logger.info(jedis.hget("tb_log:id:1", "content"));
-        return jedis.hgetAll("tb_log:id:1").toString();
+    public Object test() {
+        Map<String, String> data = new HashMap<>();
+        data.put("id", "123");
+        jedis.hmset("tb_log:id:1", data);
+        return jedis.hgetAll("tb_log:id:1");
     }
 
     @RequestMapping(value = "test/ftl")
