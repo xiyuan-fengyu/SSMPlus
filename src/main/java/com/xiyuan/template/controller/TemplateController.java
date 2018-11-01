@@ -1,6 +1,9 @@
 package com.xiyuan.template.controller;
 
 import com.baomidou.mybatisplus.plugins.Page;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.xiyuan.template.mybatis.dao.LogDao;
 import com.xiyuan.template.mybatis.entity.Log;
 import org.slf4j.Logger;
@@ -14,6 +17,7 @@ import redis.clients.jedis.Jedis;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 public class TemplateController {
@@ -25,6 +29,16 @@ public class TemplateController {
 
     @Autowired
     private LogDao logDao;
+
+    private LoadingCache<String, String> cacheExample = CacheBuilder.newBuilder()
+            .maximumSize(2048)
+            .expireAfterAccess(1, TimeUnit.MINUTES)
+            .build(new CacheLoader<String, String>() {
+                @Override
+                public String load(String s) throws Exception {
+                    return null;
+                }
+            });
 
     @RequestMapping(value = "test", produces = "text/plain;charset=utf-8")
     @ResponseBody
