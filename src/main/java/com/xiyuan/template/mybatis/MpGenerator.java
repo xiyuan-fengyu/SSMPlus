@@ -113,7 +113,7 @@ public class MpGenerator {
                 // .setEntityColumnConstant(true)
                 // 【实体】是否为构建者模型（默认 false）
                 // public User setName(String name) {this.name = name; return this;}
-                // .setEntityBuilderModel(true)
+                 .setEntityBuilderModel(true)
                 // 【实体】是否为lombok模型（默认 false）<a href="https://projectlombok.org/">document</a>
                 // .setEntityLombokModel(true)
                 // Boolean类型字段是否移除is前缀处理
