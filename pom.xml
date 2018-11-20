@@ -10,6 +10,10 @@
 
     <packaging>war</packaging>
 
+    <modules>
+        <module>mybatis-generator</module>
+    </modules>
+
     <properties>
         <spring.version>5.0.7.RELEASE</spring.version>
         <log4j2.version>2.11.0</log4j2.version>

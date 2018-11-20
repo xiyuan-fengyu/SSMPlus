@@ -13,7 +13,7 @@ import java.io.Serializable;
  * </p>
  *
  * @author xiyuan
- * @since 2018-08-22
+ * @since 2018-11-20
  */
 @TableName("tb_log")
 public class Log extends Model<Log> {
@@ -24,30 +24,43 @@ public class Log extends Model<Log> {
     private Integer id;
     private String content;
     private Date time;
+    private Integer version;
 
 
     public Integer getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public Log setId(Integer id) {
         this.id = id;
+        return this;
     }
 
     public String getContent() {
         return content;
     }
 
-    public void setContent(String content) {
+    public Log setContent(String content) {
         this.content = content;
+        return this;
     }
 
     public Date getTime() {
         return time;
     }
 
-    public void setTime(Date time) {
+    public Log setTime(Date time) {
         this.time = time;
+        return this;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public Log setVersion(Integer version) {
+        this.version = version;
+        return this;
     }
 
     @Override
@@ -61,6 +74,7 @@ public class Log extends Model<Log> {
         ", id=" + id +
         ", content=" + content +
         ", time=" + time +
+        ", version=" + version +
         "}";
     }
 }
