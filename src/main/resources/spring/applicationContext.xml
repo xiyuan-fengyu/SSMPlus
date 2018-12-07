@@ -58,11 +58,7 @@
                     </list>
                 </property>
                 <property name="gson">
-                    <bean class="org.springframework.http.converter.json.GsonFactoryBean">
-                        <property name="serializeNulls" value="true" />
-                        <property name="disableHtmlEscaping" value="true"/>
-                        <property name="dateFormatPattern" value="yyyy-MM-dd HH:mm:ss"/>
-                    </bean>
+                    <bean class="com.xiyuan.template.http.converter.GsonFactoryBean"/>
                 </property>
             </bean>
         </mvc:message-converters>
